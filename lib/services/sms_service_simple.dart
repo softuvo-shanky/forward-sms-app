@@ -6,7 +6,6 @@ import 'email_service.dart';
 
 class SmsService {
   static const MethodChannel _channel = MethodChannel('sms_service');
-  static StreamSubscription? _smsSubscription;
   static bool _isInitialized = false;
 
   static Future<void> initialize() async {
@@ -28,7 +27,7 @@ class SmsService {
   }
 
   static void _setupSmsListener() {
-    _smsSubscription = _channel.setMethodCallHandler((call) async {
+    _channel.setMethodCallHandler((call) async {
       if (call.method == 'onSmsReceived') {
         final Map<dynamic, dynamic> smsData = call.arguments;
         await _handleSmsReceived(smsData);
@@ -69,8 +68,6 @@ class SmsService {
   }
 
   static void dispose() {
-    _smsSubscription?.cancel();
-    _smsSubscription = null;
     _isInitialized = false;
   }
 }
