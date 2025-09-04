@@ -43,15 +43,7 @@ class EmailService {
         ''';
 
       // Configure SMTP server
-      final smtpServer = SmtpServer(
-        smtpHost,
-        port: smtpPort,
-        username: smtpUsername,
-        password: smtpPassword,
-        allowInsecure: false,
-        ssl: smtpPort == 465,
-        allowBadCertificates: false,
-      );
+      final smtpServer = gmail(smtpUsername, smtpPassword);
 
       // Send email
       final sendReport = await send(emailMessage, smtpServer);
@@ -100,15 +92,7 @@ class EmailService {
       final config = await getSmtpConfig();
       if (config == null) return false;
 
-      final smtpServer = SmtpServer(
-        config['smtp_host'],
-        port: config['smtp_port'],
-        username: config['smtp_username'],
-        password: config['smtp_password'],
-        allowInsecure: false,
-        ssl: config['smtp_port'] == 465,
-        allowBadCertificates: false,
-      );
+      final smtpServer = gmail(config['smtp_username'], config['smtp_password']);
 
       // Try to send a test email
       final testMessage = Message()
