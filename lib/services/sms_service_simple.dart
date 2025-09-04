@@ -41,19 +41,29 @@ class SmsService {
       final String message = smsData['message'] ?? '';
       final String timestamp = smsData['timestamp'] ?? DateTime.now().toString();
 
-      print('SMS received from: $sender');
-      print('Message: $message');
+      print('📱 SMS received from: $sender');
+      print('📱 Message: $message');
+      print('📱 Timestamp: $timestamp');
 
       // Check if forwarding is enabled
       final prefs = await SharedPreferences.getInstance();
       final isEnabled = prefs.getBool('sms_forwarding_enabled') ?? false;
       
+      print('📱 SMS forwarding enabled: $isEnabled');
+      
       if (isEnabled) {
+        print('📧 Attempting to forward SMS to email...');
         // Forward to email
         await EmailService.sendSmsToEmail(sender, message, timestamp);
+        print('📧 SMS forwarding completed');
+        
+        // Log the successful send
+        await logSmsSent(sender, message);
+      } else {
+        print('⚠️ SMS forwarding is disabled');
       }
     } catch (e) {
-      print('Error handling SMS: $e');
+      print('❌ Error handling SMS: $e');
     }
   }
 
@@ -65,6 +75,34 @@ class SmsService {
   static Future<void> setEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('sms_forwarding_enabled', enabled);
+  }
+
+  static Future<void> logSmsSent(String sender, String message) async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now().toIso8601String();
+    final logEntry = '$now|$sender|${message.length} chars';
+    
+    // Get existing logs
+    final existingLogs = prefs.getStringList('sms_logs') ?? [];
+    existingLogs.add(logEntry);
+    
+    // Keep only last 100 entries
+    if (existingLogs.length > 100) {
+      existingLogs.removeRange(0, existingLogs.length - 100);
+    }
+    
+    await prefs.setStringList('sms_logs', existingLogs);
+    print('📝 Logged SMS: $logEntry');
+  }
+
+  static Future<List<String>> getSmsLogs() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList('sms_logs') ?? [];
+  }
+
+  static Future<int> getSmsCount() async {
+    final logs = await getSmsLogs();
+    return logs.length;
   }
 
   static void dispose() {

@@ -15,6 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isEnabled = false;
   bool _isLoading = true;
   Map<String, dynamic>? _smtpConfig;
+  int _smsCount = 0;
 
   @override
   void initState() {
@@ -25,10 +26,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadSettings() async {
     final isEnabled = await SmsService.isEnabled();
     final smtpConfig = await EmailService.getSmtpConfig();
+    final smsCount = await SmsService.getSmsCount();
     
     setState(() {
       _isEnabled = isEnabled;
       _smtpConfig = smtpConfig;
+      _smsCount = smsCount;
       _isLoading = false;
     });
   }
@@ -247,6 +250,74 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 4),
                             Text('Recipient: ${_smtpConfig!['recipient_email']}'),
                             Text('Sender: ${_smtpConfig!['sender_email']}'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.analytics,
+                          color: Colors.green,
+                          size: 32,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'SMS Statistics',
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              Text(
+                                'Messages forwarded: $_smsCount',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh),
+                          onPressed: _loadSettings,
+                          tooltip: 'Refresh Statistics',
+                        ),
+                      ],
+                    ),
+                    if (_smsCount > 0) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.green.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle, color: Colors.green.shade700),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'SMS forwarding is working! Check your email for forwarded messages.',
+                                style: TextStyle(color: Colors.green.shade700),
+                              ),
+                            ),
                           ],
                         ),
                       ),
