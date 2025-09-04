@@ -51,7 +51,6 @@ class EmailService {
         password: smtpPassword,
         allowInsecure: false,
         ssl: smtpPort == 465,
-        allowBadCertificates: false,
       );
 
       // Send email
@@ -108,7 +107,6 @@ class EmailService {
         password: config['smtp_password'],
         allowInsecure: false,
         ssl: config['smtp_port'] == 465,
-        allowBadCertificates: false,
       );
 
       // Try to send a test email
