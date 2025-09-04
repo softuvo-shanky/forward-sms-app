@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EmailService {
@@ -43,7 +44,15 @@ class EmailService {
         ''';
 
       // Configure SMTP server
-      final smtpServer = gmail(smtpUsername, smtpPassword);
+      final smtpServer = SmtpServer(
+        smtpHost,
+        port: smtpPort,
+        username: smtpUsername,
+        password: smtpPassword,
+        allowInsecure: false,
+        ssl: smtpPort == 465,
+        allowBadCertificates: false,
+      );
 
       // Send email
       final sendReport = await send(emailMessage, smtpServer);
@@ -92,7 +101,15 @@ class EmailService {
       final config = await getSmtpConfig();
       if (config == null) return false;
 
-      final smtpServer = gmail(config['smtp_username'], config['smtp_password']);
+      final smtpServer = SmtpServer(
+        config['smtp_host'],
+        port: config['smtp_port'],
+        username: config['smtp_username'],
+        password: config['smtp_password'],
+        allowInsecure: false,
+        ssl: config['smtp_port'] == 465,
+        allowBadCertificates: false,
+      );
 
       // Try to send a test email
       final testMessage = Message()
