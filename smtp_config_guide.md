@@ -1,16 +1,16 @@
 # Your SMTP Configuration
 
-## Gmail SMTP Settings for shanky@connect2softuvo.com
+## Gmail SMTP Settings Configuration
 
 Use these exact settings in the Forward SMS App:
 
 ### SMTP Configuration
 - **SMTP Host**: `smtp.gmail.com`
 - **SMTP Port**: `587`
-- **Username**: `shanky@connect2softuvo.com`
-- **Password**: `mhkq zbyx mvfb iyzy`
-- **Sender Email**: `shanky@connect2softuvo.com`
-- **Recipient Email**: `shanky@connect2softuvo.com` (or any email where you want to receive forwarded SMS)
+- **Username**: `[YOUR_EMAIL]@gmail.com`
+- **Password**: `[YOUR_APP_PASSWORD]`
+- **Sender Email**: `[YOUR_EMAIL]@gmail.com`
+- **Recipient Email**: `[RECIPIENT_EMAIL]@gmail.com` (or any email where you want to receive forwarded SMS)
 
 ### Step-by-Step Setup
 1. Open the Forward SMS App
@@ -21,13 +21,13 @@ Use these exact settings in the Forward SMS App:
 6. Go back to main screen and toggle SMS Forwarding ON
 
 ### Security Notes
-- The password `mhkq zbyx mvfb iyzy` appears to be a Gmail App Password
+- Use your Gmail App Password (not your regular password)
 - This is the correct way to authenticate with Gmail SMTP
 - Never use your regular Gmail password for SMTP
 
 ### Testing
 1. Send a test SMS to your phone
-2. Check your email (shanky@connect2softuvo.com) for the forwarded message
+2. Check your email for the forwarded message
 3. The email will have subject: "SMS from [sender_number]"
 
 ### Troubleshooting

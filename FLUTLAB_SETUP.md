@@ -49,10 +49,10 @@ ios/
 3. Configure SMTP with your credentials:
    - **SMTP Host**: `smtp.gmail.com`
    - **SMTP Port**: `587`
-   - **Username**: `shanky@connect2softuvo.com`
-   - **Password**: `mhkq zbyx mvfb iyzy`
-   - **Sender Email**: `shanky@connect2softuvo.com`
-   - **Recipient Email**: `shanky@connect2softuvo.com` (or any email)
+   - **Username**: `[YOUR_EMAIL]@gmail.com`
+- **Password**: `[YOUR_APP_PASSWORD]`
+   - **Sender Email**: `[YOUR_EMAIL]@gmail.com`
+   - **Recipient Email**: `[RECIPIENT_EMAIL]@gmail.com` (or any email)
 
 ## 📱 Project Features:
 

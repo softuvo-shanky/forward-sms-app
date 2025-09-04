@@ -64,8 +64,8 @@ flutter build apk --release
 3. **SMTP Test**: Use your Gmail credentials:
    - Host: `smtp.gmail.com`
    - Port: `587`
-   - Username: `shanky@connect2softuvo.com`
-   - Password: `mhkq zbyx mvfb iyzy`
+   - Username: `[YOUR_EMAIL]@gmail.com`
+   - Password: `[YOUR_APP_PASSWORD]`
 
 ## 🎯 Next Steps:
 

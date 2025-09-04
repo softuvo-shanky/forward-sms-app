@@ -82,7 +82,7 @@ flutter build apk --release
 Use these SMTP settings:
 - **SMTP Host**: `smtp.gmail.com`
 - **SMTP Port**: `587`
-- **Username**: `shanky@connect2softuvo.com`
-- **Password**: `mhkq zbyx mvfb iyzy`
+- **Username**: `[YOUR_EMAIL]@gmail.com`
+- **Password**: `[YOUR_APP_PASSWORD]`
 
 The build should now succeed! 🎉
