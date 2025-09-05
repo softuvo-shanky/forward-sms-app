@@ -100,6 +100,29 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _testSmsReceiverDirectly() async {
+    setState(() {
+      _debugLogs.add('Testing SMS receiver directly...');
+    });
+
+    try {
+      // Try to trigger the SMS receiver directly
+      await _channel.invokeMethod('triggerSmsReceiver', {
+        'sender': 'DirectTest123',
+        'message': 'Direct test SMS',
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      setState(() {
+        _debugLogs.add('Direct SMS receiver test sent');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error testing SMS receiver directly: $e');
+      });
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _debugLogs.clear();
@@ -150,6 +173,24 @@ class _DebugScreenState extends State<DebugScreen> {
                           child: ElevatedButton(
                             onPressed: _checkSmsReceiverStatus,
                             child: const Text('Check Status'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _testSmsReceiverDirectly,
+                            child: const Text('Direct Test'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _clearLogs,
+                            child: const Text('Clear Logs'),
                           ),
                         ),
                       ],

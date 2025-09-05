@@ -29,7 +29,23 @@ class MainActivity: FlutterActivity() {
                 }
                 "checkSmsReceiver" -> {
                     Log.d("MainActivity", "Checking SMS receiver status")
-                    result.success("SMS receiver is registered and ready")
+                    // Check if SMS permissions are granted
+                    val smsPermission = checkSelfPermission(android.Manifest.permission.RECEIVE_SMS)
+                    val readSmsPermission = checkSelfPermission(android.Manifest.permission.READ_SMS)
+                    val status = "SMS receiver registered. RECEIVE_SMS: $smsPermission, READ_SMS: $readSmsPermission"
+                    Log.d("MainActivity", status)
+                    result.success(status)
+                }
+                "triggerSmsReceiver" -> {
+                    Log.d("MainActivity", "Triggering SMS receiver directly")
+                    val smsData = call.arguments as Map<String, Any>
+                    val smsReceiver = SmsReceiver()
+                    smsReceiver.sendSmsToFlutter(this, 
+                        smsData["sender"] as String, 
+                        smsData["message"] as String, 
+                        smsData["timestamp"] as String
+                    )
+                    result.success("SMS receiver triggered")
                 }
                 else -> {
                     Log.w("MainActivity", "Unknown method: ${call.method}")

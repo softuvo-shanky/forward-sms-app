@@ -48,7 +48,7 @@ class SmsReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun sendSmsToFlutter(context: Context, sender: String, message: String, timestamp: String) {
+    fun sendSmsToFlutter(context: Context, sender: String, message: String, timestamp: String) {
         try {
             Log.d("SmsReceiver", "Attempting to send to Flutter...")
             
