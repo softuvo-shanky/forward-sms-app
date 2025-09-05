@@ -42,6 +42,9 @@ class SmsMonitorService : Service() {
             Log.d("SmsMonitorService", "Manual SMS check requested")
             sendDebugLogToFlutter("Manual SMS check requested")
             checkForNewSms()
+        } else if (intent?.getStringExtra("action") == "test_communication") {
+            Log.d("SmsMonitorService", "Service communication test requested")
+            sendDebugLogToFlutter("Service communication test - this message should appear in Flutter")
         }
         
         return START_STICKY
@@ -57,11 +60,15 @@ class SmsMonitorService : Service() {
             if (flutterEngine != null) {
                 methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sms_service")
                 Log.d("SmsMonitorService", "Method channel setup successful")
+                sendDebugLogToFlutter("Method channel setup successful")
             } else {
                 Log.e("SmsMonitorService", "Flutter engine not found")
+                // Try to send debug log anyway to test if method channel works
+                sendDebugLogToFlutter("ERROR: Flutter engine not found in service")
             }
         } catch (e: Exception) {
             Log.e("SmsMonitorService", "Error setting up method channel: ${e.message}")
+            sendDebugLogToFlutter("ERROR: Method channel setup failed: ${e.message}")
         }
     }
 
@@ -200,7 +207,13 @@ class SmsMonitorService : Service() {
 
     private fun sendDebugLogToFlutter(message: String) {
         try {
-            methodChannel?.invokeMethod("debugLog", "SERVICE: $message")
+            Log.d("SmsMonitorService", "Attempting to send debug log: $message")
+            if (methodChannel != null) {
+                methodChannel?.invokeMethod("debugLog", "SERVICE: $message")
+                Log.d("SmsMonitorService", "Debug log sent successfully")
+            } else {
+                Log.e("SmsMonitorService", "Method channel is null, cannot send debug log")
+            }
         } catch (e: Exception) {
             Log.e("SmsMonitorService", "Error sending debug log: ${e.message}")
         }

@@ -78,6 +78,13 @@ class MainActivity: FlutterActivity() {
                     startService(serviceIntent)
                     result.success("SMS check triggered")
                 }
+                "testServiceCommunication" -> {
+                    Log.d("MainActivity", "Testing service communication")
+                    val serviceIntent = Intent(this, SmsMonitorService::class.java)
+                    serviceIntent.putExtra("action", "test_communication")
+                    startService(serviceIntent)
+                    result.success("Service communication test triggered")
+                }
                 else -> {
                     Log.w("MainActivity", "Unknown method: ${call.method}")
                     result.notImplemented()
