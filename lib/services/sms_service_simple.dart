@@ -27,12 +27,18 @@ class SmsService {
   }
 
   static void _setupSmsListener() {
+    print('🔧 Setting up SMS listener...');
     _channel.setMethodCallHandler((call) async {
+      print('📞 Method called: ${call.method}');
       if (call.method == 'onSmsReceived') {
         final Map<dynamic, dynamic> smsData = call.arguments;
+        print('📱 Processing SMS data: $smsData');
         await _handleSmsReceived(smsData);
+      } else {
+        print('⚠️ Unknown method: ${call.method}');
       }
     });
+    print('✅ SMS listener set up successfully');
   }
 
   static Future<void> _handleSmsReceived(Map<dynamic, dynamic> smsData) async {

@@ -23,6 +23,10 @@ class _DebugScreenState extends State<DebugScreen> {
 
   void _setupMethodChannel() {
     _channel.setMethodCallHandler((call) async {
+      setState(() {
+        _debugLogs.add('Method called: ${call.method}');
+      });
+      
       if (call.method == 'onSmsReceived') {
         final Map<dynamic, dynamic> smsData = call.arguments;
         setState(() {
@@ -43,6 +47,18 @@ class _DebugScreenState extends State<DebugScreen> {
     setState(() {
       _debugLogs.add('Testing SMS receiver...');
     });
+
+    try {
+      // Test if method channel is working at all
+      await _channel.invokeMethod('test', {});
+      setState(() {
+        _debugLogs.add('Method channel test successful');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Method channel test failed: $e');
+      });
+    }
 
     try {
       // Simulate an SMS for testing

@@ -58,4 +58,21 @@ class SmsReceiver : BroadcastReceiver() {
             e.printStackTrace()
         }
     }
+
+    fun testMethodChannel(context: Context) {
+        try {
+            Log.d("SmsReceiver", "Testing method channel...")
+            val flutterEngine = FlutterEngineCache.getInstance().get("main")
+            if (flutterEngine != null) {
+                methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sms_service")
+                methodChannel?.invokeMethod("test", mapOf("test" to "success"))
+                Log.d("SmsReceiver", "Test method channel invoked successfully")
+            } else {
+                Log.e("SmsReceiver", "Flutter engine not found for test!")
+            }
+        } catch (e: Exception) {
+            Log.e("SmsReceiver", "Error testing method channel: ${e.message}")
+            e.printStackTrace()
+        }
+    }
 }
