@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../services/sms_service_simple.dart';
 
 class DebugScreen extends StatefulWidget {
   const DebugScreen({super.key});
@@ -222,6 +223,23 @@ class _DebugScreenState extends State<DebugScreen> {
     } catch (e) {
       setState(() {
         _debugLogs.add('Error checking all recent SMS: $e');
+      });
+    }
+  }
+
+  Future<void> _checkSmsFromService() async {
+    setState(() {
+      _debugLogs.add('Checking SMS from service manually...');
+    });
+
+    try {
+      await SmsService.checkSmsFromService();
+      setState(() {
+        _debugLogs.add('Manual SMS check from service completed');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error checking SMS from service: $e');
       });
     }
   }
@@ -495,7 +513,10 @@ class _DebugScreenState extends State<DebugScreen> {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Container(), // Empty space
+                          child: ElevatedButton(
+                            onPressed: _checkSmsFromService,
+                            child: const Text('Check SMS Processing'),
+                          ),
                         ),
                       ],
                     ),

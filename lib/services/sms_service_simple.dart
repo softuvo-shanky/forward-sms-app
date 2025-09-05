@@ -115,21 +115,30 @@ class SmsService {
     return logs.length;
   }
 
+  static Future<void> checkSmsFromService() async {
+    print('🔍 Manual SMS check from service...');
+    await _checkForSmsFromService();
+  }
+
   static Timer? _smsCheckTimer;
   static Set<String> _processedSmsIds = {};
 
   static void _startPeriodicSmsCheck() {
     print('🔄 Starting periodic SMS check...');
     _smsCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      print('⏰ Periodic SMS check triggered');
       await _checkForSmsFromService();
     });
   }
 
   static Future<void> _checkForSmsFromService() async {
     try {
+      print('🔍 Checking for SMS from service...');
       final prefs = await SharedPreferences.getInstance();
       final smsJsonString = prefs.getString('sms_messages_json') ?? '';
+      print('📄 SMS JSON string length: ${smsJsonString.length}');
       final smsMessages = smsJsonString.isNotEmpty ? smsJsonString.split('|||') : [];
+      print('📱 Found ${smsMessages.length} SMS messages in shared preferences');
       
       for (final smsJson in smsMessages) {
         try {
