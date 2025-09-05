@@ -92,6 +92,15 @@ class MainActivity: FlutterActivity() {
                     val sortedLogs = logs.sortedBy { it.split(":")[0].toLongOrNull() ?: 0L }
                     result.success(sortedLogs.joinToString("\n"))
                 }
+                "getSmsFromService" -> {
+                    Log.d("MainActivity", "Getting SMS from service")
+                    val prefs = getSharedPreferences("sms_data", MODE_PRIVATE)
+                    val smsMessages = prefs.getStringSet("sms_messages", setOf()) ?: setOf()
+                    val sortedSms = smsMessages.sortedBy { 
+                        it.split("|").find { it.startsWith("received_at=") }?.split("=")?.get(1)?.toLongOrNull() ?: 0L 
+                    }
+                    result.success(sortedSms.joinToString("\n"))
+                }
                 else -> {
                     Log.w("MainActivity", "Unknown method: ${call.method}")
                     result.notImplemented()

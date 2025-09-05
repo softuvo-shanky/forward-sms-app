@@ -191,11 +191,20 @@ class SmsMonitorService : Service() {
             Log.d("SmsMonitorService", "Sending SMS to Flutter - From: $sender")
             sendDebugLogToFlutter("Sending SMS to Flutter - From: $sender")
             
-            methodChannel?.invokeMethod("onSmsReceived", mapOf(
-                "sender" to sender,
-                "message" to message,
-                "timestamp" to timestamp
-            ))
+            // Try method channel first
+            try {
+                methodChannel?.invokeMethod("onSmsReceived", mapOf(
+                    "sender" to sender,
+                    "message" to message,
+                    "timestamp" to timestamp
+                ))
+                Log.d("SmsMonitorService", "SMS sent via method channel")
+            } catch (e: Exception) {
+                Log.e("SmsMonitorService", "Method channel failed: ${e.message}")
+            }
+            
+            // Also write to shared preferences as backup
+            writeSmsToSharedPrefs(sender, message, timestamp)
             
             Log.d("SmsMonitorService", "SMS sent to Flutter successfully")
             sendDebugLogToFlutter("SMS sent to Flutter successfully")
@@ -203,6 +212,40 @@ class SmsMonitorService : Service() {
         } catch (e: Exception) {
             Log.e("SmsMonitorService", "Error sending SMS to Flutter: ${e.message}")
             sendDebugLogToFlutter("Error sending SMS to Flutter: ${e.message}")
+        }
+    }
+
+    private fun writeSmsToSharedPrefs(sender: String, message: String, timestamp: String) {
+        try {
+            val prefs = getSharedPreferences("sms_data", MODE_PRIVATE)
+            val smsData = mapOf(
+                "sender" to sender,
+                "message" to message,
+                "timestamp" to timestamp,
+                "received_at" to System.currentTimeMillis().toString()
+            )
+            
+            val existingSms = prefs.getStringSet("sms_messages", mutableSetOf()) ?: mutableSetOf()
+            val smsJson = smsData.entries.joinToString("|") { "${it.key}=${it.value}" }
+            existingSms.add(smsJson)
+            
+            // Keep only last 20 SMS
+            if (existingSms.size > 20) {
+                val sortedSms = existingSms.sortedBy { 
+                    it.split("|").find { it.startsWith("received_at=") }?.split("=")?.get(1)?.toLongOrNull() ?: 0L 
+                }
+                val recentSms = sortedSms.takeLast(20).toSet()
+                prefs.edit().putStringSet("sms_messages", recentSms).apply()
+            } else {
+                prefs.edit().putStringSet("sms_messages", existingSms).apply()
+            }
+            
+            Log.d("SmsMonitorService", "SMS written to shared preferences")
+            sendDebugLogToFlutter("SMS written to shared preferences")
+            
+        } catch (e: Exception) {
+            Log.e("SmsMonitorService", "Error writing SMS to shared preferences: ${e.message}")
+            sendDebugLogToFlutter("Error writing SMS to shared preferences: ${e.message}")
         }
     }
 

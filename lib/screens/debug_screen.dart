@@ -252,6 +252,36 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _getSmsFromService() async {
+    setState(() {
+      _debugLogs.add('Getting SMS from service...');
+    });
+
+    try {
+      final result = await _channel.invokeMethod('getSmsFromService');
+      if (result != null && result.isNotEmpty) {
+        final smsList = result.split('\n');
+        setState(() {
+          for (final sms in smsList) {
+            final parts = sms.split('|');
+            final sender = parts.firstWhere((p) => p.startsWith('sender='), orElse: () => 'sender=Unknown').split('=')[1];
+            final message = parts.firstWhere((p) => p.startsWith('message='), orElse: () => 'message=').split('=')[1];
+            final timestamp = parts.firstWhere((p) => p.startsWith('timestamp='), orElse: () => 'timestamp=').split('=')[1];
+            _debugLogs.add('SMS: From $sender - $message (${DateTime.fromMillisecondsSinceEpoch(int.parse(timestamp)).toString()})');
+          }
+        });
+      } else {
+        setState(() {
+          _debugLogs.add('No SMS found from service');
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error getting SMS from service: $e');
+      });
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _debugLogs.clear();
@@ -402,6 +432,21 @@ class _DebugScreenState extends State<DebugScreen> {
                             onPressed: _getServiceDebugLogs,
                             child: const Text('Get Service Logs'),
                           ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _getSmsFromService,
+                            child: const Text('Get SMS from Service'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(), // Empty space
                         ),
                       ],
                     ),
