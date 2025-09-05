@@ -342,16 +342,20 @@ class SmsMonitorService : Service() {
             val smsJson = smsData.entries.joinToString("|") { "${it.key}=${it.value}" }
             existingSms.add(smsJson)
             
+            // Convert to List for Flutter compatibility
+            val smsList = existingSms.toList()
+            
             // Keep only last 20 SMS
-            if (existingSms.size > 20) {
-                val sortedSms = existingSms.sortedBy { 
+            val finalSmsList = if (smsList.size > 20) {
+                val sortedSms = smsList.sortedBy { 
                     it.split("|").find { it.startsWith("received_at=") }?.split("=")?.get(1)?.toLongOrNull() ?: 0L 
                 }
-                val recentSms = sortedSms.takeLast(20).toSet()
-                prefs.edit().putStringSet("sms_messages", recentSms).apply()
+                sortedSms.takeLast(20)
             } else {
-                prefs.edit().putStringSet("sms_messages", existingSms).apply()
+                smsList
             }
+            
+            prefs.edit().putStringList("sms_messages", finalSmsList).apply()
             
             Log.d("SmsMonitorService", "SMS written to shared preferences")
             sendDebugLogToFlutter("SMS written to shared preferences")

@@ -128,7 +128,7 @@ class SmsService {
   static Future<void> _checkForSmsFromService() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final smsMessages = prefs.getStringSet('sms_messages') ?? {};
+      final smsMessages = prefs.getStringList('sms_messages') ?? [];
       
       for (final smsJson in smsMessages) {
         try {
