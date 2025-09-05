@@ -3,6 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../services/sms_service_simple.dart';
 import '../services/email_service.dart';
 import 'settings_screen.dart';
+import 'logs_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -106,6 +107,16 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.analytics),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LogsScreen()),
+              );
+            },
+            tooltip: 'View SMS Logs',
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () async {
@@ -291,6 +302,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.analytics),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const LogsScreen()),
+                            );
+                          },
+                          tooltip: 'View Detailed Logs',
                         ),
                         IconButton(
                           icon: const Icon(Icons.refresh),
