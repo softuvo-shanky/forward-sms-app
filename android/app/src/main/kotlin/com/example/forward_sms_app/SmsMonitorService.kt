@@ -35,21 +35,25 @@ class SmsMonitorService : Service() {
         startSmsMonitoring()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("SmsMonitorService", "Service started")
-        
-        // Check if this is a manual SMS check request
-        if (intent?.getStringExtra("action") == "check_sms") {
-            Log.d("SmsMonitorService", "Manual SMS check requested")
-            sendDebugLogToFlutter("Manual SMS check requested")
-            checkForNewSms()
-        } else if (intent?.getStringExtra("action") == "test_communication") {
-            Log.d("SmsMonitorService", "Service communication test requested")
-            sendDebugLogToFlutter("Service communication test - this message should appear in Flutter")
-        }
-        
-        return START_STICKY
-    }
+                override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+                Log.d("SmsMonitorService", "Service started")
+                
+                // Check if this is a manual SMS check request
+                if (intent?.getStringExtra("action") == "check_sms") {
+                    Log.d("SmsMonitorService", "Manual SMS check requested")
+                    sendDebugLogToFlutter("Manual SMS check requested")
+                    checkForNewSms()
+                } else if (intent?.getStringExtra("action") == "check_all_recent_sms") {
+                    Log.d("SmsMonitorService", "Check all recent SMS requested")
+                    sendDebugLogToFlutter("Check all recent SMS requested")
+                    checkAllRecentSms()
+                } else if (intent?.getStringExtra("action") == "test_communication") {
+                    Log.d("SmsMonitorService", "Service communication test requested")
+                    sendDebugLogToFlutter("Service communication test - this message should appear in Flutter")
+                }
+                
+                return START_STICKY
+            }
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -135,56 +139,163 @@ class SmsMonitorService : Service() {
         return lastId
     }
 
-    private fun checkForNewSms() {
-        try {
-            Log.d("SmsMonitorService", "Checking for new SMS...")
-            sendDebugLogToFlutter("Checking for new SMS...")
-            
-            val cursor: Cursor? = contentResolver.query(
-                Telephony.Sms.CONTENT_URI,
-                arrayOf(
-                    Telephony.Sms._ID,
-                    Telephony.Sms.ADDRESS,
-                    Telephony.Sms.BODY,
-                    Telephony.Sms.DATE
-                ),
-                "${Telephony.Sms._ID} > ?",
-                arrayOf(lastSmsId.toString()),
-                "${Telephony.Sms._ID} ASC"
-            )
-            
-            sendDebugLogToFlutter("Query executed, cursor: ${cursor != null}")
-            
-            cursor?.use {
-                val count = it.count
-                sendDebugLogToFlutter("Found $count SMS messages")
-                
-                while (it.moveToNext()) {
-                    val id = it.getLong(0)
-                    val address = it.getString(1) ?: "Unknown"
-                    val body = it.getString(2) ?: ""
-                    val date = it.getLong(3)
+                private fun checkForNewSms() {
+                try {
+                    Log.d("SmsMonitorService", "Checking for new SMS...")
+                    sendDebugLogToFlutter("Checking for new SMS...")
                     
-                    Log.d("SmsMonitorService", "New SMS found - ID: $id, From: $address, Body: $body")
-                    sendDebugLogToFlutter("New SMS found - ID: $id, From: $address")
+                    // First, let's check what's the latest SMS ID in the database
+                    val latestSmsId = getLatestSmsId()
+                    sendDebugLogToFlutter("Latest SMS ID in database: $latestSmsId")
+                    sendDebugLogToFlutter("Last processed SMS ID: $lastSmsId")
                     
-                    // Send to Flutter
-                    sendSmsToFlutter(address, body, date.toString())
+                    val cursor: Cursor? = contentResolver.query(
+                        Telephony.Sms.CONTENT_URI,
+                        arrayOf(
+                            Telephony.Sms._ID,
+                            Telephony.Sms.ADDRESS,
+                            Telephony.Sms.BODY,
+                            Telephony.Sms.DATE
+                        ),
+                        "${Telephony.Sms._ID} > ?",
+                        arrayOf(lastSmsId.toString()),
+                        "${Telephony.Sms._ID} ASC"
+                    )
                     
-                    // Update last SMS ID
-                    lastSmsId = id
+                    sendDebugLogToFlutter("Query executed, cursor: ${cursor != null}")
+                    
+                    cursor?.use {
+                        val count = it.count
+                        sendDebugLogToFlutter("Found $count new SMS messages")
+                        
+                        if (count == 0) {
+                            // No new SMS, but let's check if there are any recent SMS
+                            sendDebugLogToFlutter("No new SMS found. Checking recent SMS...")
+                            checkRecentSms()
+                        } else {
+                            while (it.moveToNext()) {
+                                val id = it.getLong(0)
+                                val address = it.getString(1) ?: "Unknown"
+                                val body = it.getString(2) ?: ""
+                                val date = it.getLong(3)
+                                
+                                Log.d("SmsMonitorService", "New SMS found - ID: $id, From: $address, Body: $body")
+                                sendDebugLogToFlutter("New SMS found - ID: $id, From: $address")
+                                
+                                // Send to Flutter
+                                sendSmsToFlutter(address, body, date.toString())
+                                
+                                // Update last SMS ID
+                                lastSmsId = id
+                            }
+                        }
+                    }
+                    
+                    if (cursor == null) {
+                        sendDebugLogToFlutter("ERROR: Cursor is null!")
+                    }
+                    
+                } catch (e: Exception) {
+                    Log.e("SmsMonitorService", "Error checking for new SMS: ${e.message}")
+                    sendDebugLogToFlutter("Error checking for new SMS: ${e.message}")
                 }
             }
             
-            if (cursor == null) {
-                sendDebugLogToFlutter("ERROR: Cursor is null!")
+            private fun getLatestSmsId(): Long {
+                var latestId = -1L
+                try {
+                    val cursor: Cursor? = contentResolver.query(
+                        Telephony.Sms.CONTENT_URI,
+                        arrayOf(Telephony.Sms._ID),
+                        null,
+                        null,
+                        "${Telephony.Sms._ID} DESC LIMIT 1"
+                    )
+                    cursor?.use {
+                        if (it.moveToFirst()) {
+                            latestId = it.getLong(0)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("SmsMonitorService", "Error getting latest SMS ID: ${e.message}")
+                }
+                return latestId
             }
             
-        } catch (e: Exception) {
-            Log.e("SmsMonitorService", "Error checking for new SMS: ${e.message}")
-            sendDebugLogToFlutter("Error checking for new SMS: ${e.message}")
-        }
-    }
+            private fun checkRecentSms() {
+                try {
+                    sendDebugLogToFlutter("Checking recent SMS (last 5)...")
+                    
+                    val cursor: Cursor? = contentResolver.query(
+                        Telephony.Sms.CONTENT_URI,
+                        arrayOf(
+                            Telephony.Sms._ID,
+                            Telephony.Sms.ADDRESS,
+                            Telephony.Sms.BODY,
+                            Telephony.Sms.DATE
+                        ),
+                        null,
+                        null,
+                        "${Telephony.Sms._ID} DESC LIMIT 5"
+                    )
+                    
+                    cursor?.use {
+                        val count = it.count
+                        sendDebugLogToFlutter("Found $count recent SMS messages")
+                        
+                        while (it.moveToNext()) {
+                            val id = it.getLong(0)
+                            val address = it.getString(1) ?: "Unknown"
+                            val body = it.getString(2) ?: ""
+                            val date = it.getLong(3)
+                            
+                            sendDebugLogToFlutter("Recent SMS - ID: $id, From: $address, Body: ${body.take(20)}...")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("SmsMonitorService", "Error checking recent SMS: ${e.message}")
+                    sendDebugLogToFlutter("Error checking recent SMS: ${e.message}")
+                }
+            }
+            
+            private fun checkAllRecentSms() {
+                try {
+                    sendDebugLogToFlutter("Checking all recent SMS (last 10)...")
+                    
+                    val cursor: Cursor? = contentResolver.query(
+                        Telephony.Sms.CONTENT_URI,
+                        arrayOf(
+                            Telephony.Sms._ID,
+                            Telephony.Sms.ADDRESS,
+                            Telephony.Sms.BODY,
+                            Telephony.Sms.DATE
+                        ),
+                        null,
+                        null,
+                        "${Telephony.Sms._ID} DESC LIMIT 10"
+                    )
+                    
+                    cursor?.use {
+                        val count = it.count
+                        sendDebugLogToFlutter("Found $count recent SMS messages")
+                        
+                        while (it.moveToNext()) {
+                            val id = it.getLong(0)
+                            val address = it.getString(1) ?: "Unknown"
+                            val body = it.getString(2) ?: ""
+                            val date = it.getLong(3)
+                            
+                            sendDebugLogToFlutter("Recent SMS - ID: $id, From: $address, Body: ${body.take(30)}...")
+                            
+                            // Send to Flutter as if it's a new SMS
+                            sendSmsToFlutter(address, body, date.toString())
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("SmsMonitorService", "Error checking all recent SMS: ${e.message}")
+                    sendDebugLogToFlutter("Error checking all recent SMS: ${e.message}")
+                }
+            }
 
     private fun sendSmsToFlutter(sender: String, message: String, timestamp: String) {
         try {

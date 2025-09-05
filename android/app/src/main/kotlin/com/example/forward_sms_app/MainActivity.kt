@@ -71,13 +71,20 @@ class MainActivity: FlutterActivity() {
                     val isRunning = isServiceRunning(SmsMonitorService::class.java)
                     result.success("SMS monitoring running: $isRunning")
                 }
-                "triggerSmsCheck" -> {
-                    Log.d("MainActivity", "Triggering SMS check manually")
-                    val serviceIntent = Intent(this, SmsMonitorService::class.java)
-                    serviceIntent.putExtra("action", "check_sms")
-                    startService(serviceIntent)
-                    result.success("SMS check triggered")
-                }
+                                        "triggerSmsCheck" -> {
+                            Log.d("MainActivity", "Triggering SMS check manually")
+                            val serviceIntent = Intent(this, SmsMonitorService::class.java)
+                            serviceIntent.putExtra("action", "check_sms")
+                            startService(serviceIntent)
+                            result.success("SMS check triggered")
+                        }
+                        "checkAllRecentSms" -> {
+                            Log.d("MainActivity", "Checking all recent SMS")
+                            val serviceIntent = Intent(this, SmsMonitorService::class.java)
+                            serviceIntent.putExtra("action", "check_all_recent_sms")
+                            startService(serviceIntent)
+                            result.success("All recent SMS check triggered")
+                        }
                 "testServiceCommunication" -> {
                     Log.d("MainActivity", "Testing service communication")
                     val serviceIntent = Intent(this, SmsMonitorService::class.java)

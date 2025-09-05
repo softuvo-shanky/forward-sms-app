@@ -209,6 +209,23 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _checkAllRecentSms() async {
+    setState(() {
+      _debugLogs.add('Checking all recent SMS...');
+    });
+
+    try {
+      await _channel.invokeMethod('checkAllRecentSms');
+      setState(() {
+        _debugLogs.add('All recent SMS check triggered');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error checking all recent SMS: $e');
+      });
+    }
+  }
+
   Future<void> _testServiceCommunication() async {
     setState(() {
       _debugLogs.add('Testing service communication...');
@@ -439,16 +456,31 @@ class _DebugScreenState extends State<DebugScreen> {
                       children: [
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: _testServiceCommunication,
-                            child: const Text('Test Communication'),
+                            onPressed: _checkAllRecentSms,
+                            child: const Text('Check All Recent'),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: ElevatedButton(
+                            onPressed: _testServiceCommunication,
+                            child: const Text('Test Communication'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
                             onPressed: _getServiceDebugLogs,
                             child: const Text('Get Service Logs'),
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(), // Empty space
                         ),
                       ],
                     ),
