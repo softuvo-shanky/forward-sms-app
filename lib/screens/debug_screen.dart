@@ -263,11 +263,28 @@ class _DebugScreenState extends State<DebugScreen> {
         final smsList = result.split('\n');
         setState(() {
           for (final sms in smsList) {
-            final parts = sms.split('|');
-            final sender = parts.firstWhere((p) => p.startsWith('sender='), orElse: () => 'sender=Unknown').split('=')[1];
-            final message = parts.firstWhere((p) => p.startsWith('message='), orElse: () => 'message=').split('=')[1];
-            final timestamp = parts.firstWhere((p) => p.startsWith('timestamp='), orElse: () => 'timestamp=').split('=')[1];
-            _debugLogs.add('SMS: From $sender - $message (${DateTime.fromMillisecondsSinceEpoch(int.parse(timestamp)).toString()})');
+            try {
+              final parts = sms.split('|');
+              String sender = 'Unknown';
+              String message = '';
+              String timestamp = '0';
+              
+              for (final part in parts) {
+                if (part.startsWith('sender=')) {
+                  sender = part.split('=')[1];
+                } else if (part.startsWith('message=')) {
+                  message = part.split('=')[1];
+                } else if (part.startsWith('timestamp=')) {
+                  timestamp = part.split('=')[1];
+                }
+              }
+              
+              final timestampInt = int.tryParse(timestamp) ?? 0;
+              final dateTime = DateTime.fromMillisecondsSinceEpoch(timestampInt);
+              _debugLogs.add('SMS: From $sender - $message (${dateTime.toString()})');
+            } catch (e) {
+              _debugLogs.add('SMS: Raw data - $sms');
+            }
           }
         });
       } else {
