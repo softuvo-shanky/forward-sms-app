@@ -66,6 +66,11 @@ class MainActivity: FlutterActivity() {
                     stopService(serviceIntent)
                     result.success("SMS monitoring stopped")
                 }
+                "checkSmsMonitoring" -> {
+                    Log.d("MainActivity", "Checking SMS monitoring status")
+                    val isRunning = isServiceRunning(SmsMonitorService::class.java)
+                    result.success("SMS monitoring running: $isRunning")
+                }
                 else -> {
                     Log.w("MainActivity", "Unknown method: ${call.method}")
                     result.notImplemented()
@@ -74,5 +79,17 @@ class MainActivity: FlutterActivity() {
         }
         
         Log.d("MainActivity", "Method channel configured successfully")
+    }
+
+    private fun isServiceRunning(serviceClass: Class<*>): Boolean {
+        val activityManager = getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager
+        val services = activityManager.getRunningServices(Integer.MAX_VALUE)
+        
+        for (service in services) {
+            if (serviceClass.name == service.service.className) {
+                return true
+            }
+        }
+        return false
     }
 }

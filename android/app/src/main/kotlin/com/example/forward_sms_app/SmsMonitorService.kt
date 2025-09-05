@@ -1,14 +1,20 @@
 package com.example.forward_sms_app
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.provider.Telephony
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.embedding.engine.FlutterEngineCache
 
@@ -16,10 +22,14 @@ class SmsMonitorService : Service() {
     private var methodChannel: MethodChannel? = null
     private var smsObserver: ContentObserver? = null
     private var lastSmsId: Long = -1
+    private val NOTIFICATION_ID = 1001
+    private val CHANNEL_ID = "sms_monitor_channel"
 
     override fun onCreate() {
         super.onCreate()
         Log.d("SmsMonitorService", "Service created")
+        createNotificationChannel()
+        startForeground(NOTIFICATION_ID, createNotification())
         setupMethodChannel()
         startSmsMonitoring()
     }
@@ -169,6 +179,37 @@ class SmsMonitorService : Service() {
         } catch (e: Exception) {
             Log.e("SmsMonitorService", "Error sending debug log: ${e.message}")
         }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "SMS Monitor Service",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Monitors incoming SMS messages"
+            }
+            
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun createNotification(): Notification {
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("SMS Monitor Running")
+            .setContentText("Monitoring for incoming SMS messages")
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .build()
     }
 
     override fun onDestroy() {

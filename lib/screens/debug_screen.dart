@@ -175,6 +175,23 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _checkSmsMonitoring() async {
+    setState(() {
+      _debugLogs.add('Checking SMS monitoring status...');
+    });
+
+    try {
+      final result = await _channel.invokeMethod('checkSmsMonitoring');
+      setState(() {
+        _debugLogs.add('SMS monitoring status: $result');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error checking SMS monitoring: $e');
+      });
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _debugLogs.clear();
@@ -289,6 +306,21 @@ class _DebugScreenState extends State<DebugScreen> {
                             onPressed: _stopSmsMonitoring,
                             child: const Text('Stop Monitoring'),
                           ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _checkSmsMonitoring,
+                            child: const Text('Check Status'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(), // Empty space
                         ),
                       ],
                     ),
