@@ -20,6 +20,10 @@ class SmsService {
 
       // Set up SMS listener
       _setupSmsListener();
+      
+      // Start periodic check for SMS from service
+      _startPeriodicSmsCheck();
+      
       _isInitialized = true;
     } catch (e) {
       print('Error initializing SMS service: $e');
@@ -111,7 +115,67 @@ class SmsService {
     return logs.length;
   }
 
+  static Timer? _smsCheckTimer;
+  static Set<String> _processedSmsIds = {};
+
+  static void _startPeriodicSmsCheck() {
+    print('🔄 Starting periodic SMS check...');
+    _smsCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      await _checkForSmsFromService();
+    });
+  }
+
+  static Future<void> _checkForSmsFromService() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final smsMessages = prefs.getStringSet('sms_messages') ?? {};
+      
+      for (final smsJson in smsMessages) {
+        try {
+          final parts = smsJson.split('|');
+          String sender = 'Unknown';
+          String message = '';
+          String timestamp = '0';
+          String receivedAt = '0';
+          
+          for (final part in parts) {
+            if (part.startsWith('sender=')) {
+              sender = part.split('=')[1];
+            } else if (part.startsWith('message=')) {
+              message = part.split('=')[1];
+            } else if (part.startsWith('timestamp=')) {
+              timestamp = part.split('=')[1];
+            } else if (part.startsWith('received_at=')) {
+              receivedAt = part.split('=')[1];
+            }
+          }
+          
+          // Create unique ID for this SMS
+          final smsId = '${sender}_${timestamp}_${receivedAt}';
+          
+          // Only process if we haven't processed this SMS before
+          if (!_processedSmsIds.contains(smsId)) {
+            _processedSmsIds.add(smsId);
+            
+            print('📱 Processing SMS from service - From: $sender');
+            await _handleSmsReceived({
+              'sender': sender,
+              'message': message,
+              'timestamp': timestamp,
+            });
+          }
+        } catch (e) {
+          print('❌ Error parsing SMS from service: $e');
+        }
+      }
+    } catch (e) {
+      print('❌ Error checking SMS from service: $e');
+    }
+  }
+
   static void dispose() {
     _isInitialized = false;
+    _smsCheckTimer?.cancel();
+    _smsCheckTimer = null;
   }
 }

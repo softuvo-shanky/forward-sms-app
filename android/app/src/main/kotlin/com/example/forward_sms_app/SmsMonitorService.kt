@@ -297,34 +297,36 @@ class SmsMonitorService : Service() {
                 }
             }
 
-    private fun sendSmsToFlutter(sender: String, message: String, timestamp: String) {
-        try {
-            Log.d("SmsMonitorService", "Sending SMS to Flutter - From: $sender")
-            sendDebugLogToFlutter("Sending SMS to Flutter - From: $sender")
-            
-            // Try method channel first
-            try {
-                methodChannel?.invokeMethod("onSmsReceived", mapOf(
-                    "sender" to sender,
-                    "message" to message,
-                    "timestamp" to timestamp
-                ))
-                Log.d("SmsMonitorService", "SMS sent via method channel")
-            } catch (e: Exception) {
-                Log.e("SmsMonitorService", "Method channel failed: ${e.message}")
+                private fun sendSmsToFlutter(sender: String, message: String, timestamp: String) {
+                try {
+                    Log.d("SmsMonitorService", "Sending SMS to Flutter - From: $sender")
+                    sendDebugLogToFlutter("Sending SMS to Flutter - From: $sender")
+                    
+                    // Try method channel first
+                    try {
+                        methodChannel?.invokeMethod("onSmsReceived", mapOf(
+                            "sender" to sender,
+                            "message" to message,
+                            "timestamp" to timestamp
+                        ))
+                        Log.d("SmsMonitorService", "SMS sent via method channel")
+                        sendDebugLogToFlutter("SMS sent via method channel")
+                    } catch (e: Exception) {
+                        Log.e("SmsMonitorService", "Method channel failed: ${e.message}")
+                        sendDebugLogToFlutter("Method channel failed: ${e.message}")
+                    }
+                    
+                    // Also write to shared preferences as backup
+                    writeSmsToSharedPrefs(sender, message, timestamp)
+                    
+                    Log.d("SmsMonitorService", "SMS sent to Flutter successfully")
+                    sendDebugLogToFlutter("SMS sent to Flutter successfully")
+                    
+                } catch (e: Exception) {
+                    Log.e("SmsMonitorService", "Error sending SMS to Flutter: ${e.message}")
+                    sendDebugLogToFlutter("Error sending SMS to Flutter: ${e.message}")
+                }
             }
-            
-            // Also write to shared preferences as backup
-            writeSmsToSharedPrefs(sender, message, timestamp)
-            
-            Log.d("SmsMonitorService", "SMS sent to Flutter successfully")
-            sendDebugLogToFlutter("SMS sent to Flutter successfully")
-            
-        } catch (e: Exception) {
-            Log.e("SmsMonitorService", "Error sending SMS to Flutter: ${e.message}")
-            sendDebugLogToFlutter("Error sending SMS to Flutter: ${e.message}")
-        }
-    }
 
     private fun writeSmsToSharedPrefs(sender: String, message: String, timestamp: String) {
         try {
