@@ -192,6 +192,23 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _triggerSmsCheck() async {
+    setState(() {
+      _debugLogs.add('Triggering manual SMS check...');
+    });
+
+    try {
+      await _channel.invokeMethod('triggerSmsCheck');
+      setState(() {
+        _debugLogs.add('Manual SMS check triggered');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error triggering SMS check: $e');
+      });
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _debugLogs.clear();
@@ -320,7 +337,10 @@ class _DebugScreenState extends State<DebugScreen> {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Container(), // Empty space
+                          child: ElevatedButton(
+                            onPressed: _triggerSmsCheck,
+                            child: const Text('Check SMS Now'),
+                          ),
                         ),
                       ],
                     ),

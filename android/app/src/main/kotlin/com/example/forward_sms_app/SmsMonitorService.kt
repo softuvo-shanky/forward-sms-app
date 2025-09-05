@@ -36,6 +36,14 @@ class SmsMonitorService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("SmsMonitorService", "Service started")
+        
+        // Check if this is a manual SMS check request
+        if (intent?.getStringExtra("action") == "check_sms") {
+            Log.d("SmsMonitorService", "Manual SMS check requested")
+            sendDebugLogToFlutter("Manual SMS check requested")
+            checkForNewSms()
+        }
+        
         return START_STICKY
     }
 
@@ -60,16 +68,19 @@ class SmsMonitorService : Service() {
     private fun startSmsMonitoring() {
         try {
             Log.d("SmsMonitorService", "Starting SMS monitoring")
+            sendDebugLogToFlutter("Starting SMS monitoring...")
             
             // Get the last SMS ID to avoid processing old messages
             lastSmsId = getLastSmsId()
             Log.d("SmsMonitorService", "Last SMS ID: $lastSmsId")
+            sendDebugLogToFlutter("Last SMS ID: $lastSmsId")
             
             // Register content observer for SMS changes
             smsObserver = object : ContentObserver(Handler(mainLooper)) {
                 override fun onChange(selfChange: Boolean, uri: Uri?) {
                     super.onChange(selfChange, uri)
                     Log.d("SmsMonitorService", "SMS content changed: $uri")
+                    sendDebugLogToFlutter("SMS content changed: $uri")
                     checkForNewSms()
                 }
             }
@@ -83,6 +94,10 @@ class SmsMonitorService : Service() {
             
             Log.d("SmsMonitorService", "SMS monitoring started successfully")
             sendDebugLogToFlutter("SMS monitoring started successfully")
+            
+            // Test the content observer by checking for SMS immediately
+            sendDebugLogToFlutter("Testing SMS detection...")
+            checkForNewSms()
             
         } catch (e: Exception) {
             Log.e("SmsMonitorService", "Error starting SMS monitoring: ${e.message}")
@@ -115,6 +130,7 @@ class SmsMonitorService : Service() {
     private fun checkForNewSms() {
         try {
             Log.d("SmsMonitorService", "Checking for new SMS...")
+            sendDebugLogToFlutter("Checking for new SMS...")
             
             val cursor: Cursor? = contentResolver.query(
                 Telephony.Sms.CONTENT_URI,
@@ -129,7 +145,12 @@ class SmsMonitorService : Service() {
                 "${Telephony.Sms._ID} ASC"
             )
             
+            sendDebugLogToFlutter("Query executed, cursor: ${cursor != null}")
+            
             cursor?.use {
+                val count = it.count
+                sendDebugLogToFlutter("Found $count SMS messages")
+                
                 while (it.moveToNext()) {
                     val id = it.getLong(0)
                     val address = it.getString(1) ?: "Unknown"
@@ -145,6 +166,10 @@ class SmsMonitorService : Service() {
                     // Update last SMS ID
                     lastSmsId = id
                 }
+            }
+            
+            if (cursor == null) {
+                sendDebugLogToFlutter("ERROR: Cursor is null!")
             }
             
         } catch (e: Exception) {
