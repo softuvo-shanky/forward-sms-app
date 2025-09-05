@@ -4,6 +4,7 @@ import '../services/sms_service_simple.dart';
 import '../services/email_service.dart';
 import 'settings_screen.dart';
 import 'logs_screen.dart';
+import 'debug_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -107,6 +108,16 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DebugScreen()),
+              );
+            },
+            tooltip: 'Debug SMS Receiver',
+          ),
           IconButton(
             icon: const Icon(Icons.analytics),
             onPressed: () {
