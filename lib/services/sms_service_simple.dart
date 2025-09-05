@@ -9,11 +9,17 @@ class SmsService {
   static bool _isInitialized = false;
 
   static Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      print('🔄 SMS service already initialized');
+      return;
+    }
     
     try {
+      print('🚀 Initializing SMS service...');
+      
       // Check if SMS permission is granted
       final status = await Permission.sms.status;
+      print('📱 SMS permission status: $status');
       if (status != PermissionStatus.granted) {
         await Permission.sms.request();
       }
@@ -25,8 +31,9 @@ class SmsService {
       _startPeriodicSmsCheck();
       
       _isInitialized = true;
+      print('✅ SMS service initialized successfully');
     } catch (e) {
-      print('Error initializing SMS service: $e');
+      print('❌ Error initializing SMS service: $e');
     }
   }
 
@@ -60,6 +67,8 @@ class SmsService {
       final isEnabled = prefs.getBool('sms_forwarding_enabled') ?? false;
       
       print('📱 SMS forwarding enabled: $isEnabled');
+      print('📱 Processing SMS from: $sender');
+      print('📱 Message length: ${message.length}');
       
       if (isEnabled) {
         print('📧 Attempting to forward SMS to email...');
@@ -129,6 +138,7 @@ class SmsService {
       print('⏰ Periodic SMS check triggered');
       await _checkForSmsFromService();
     });
+    print('✅ Periodic SMS check timer started');
   }
 
   static Future<void> _checkForSmsFromService() async {
