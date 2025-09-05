@@ -85,6 +85,13 @@ class MainActivity: FlutterActivity() {
                     startService(serviceIntent)
                     result.success("Service communication test triggered")
                 }
+                "getServiceDebugLogs" -> {
+                    Log.d("MainActivity", "Getting service debug logs")
+                    val prefs = getSharedPreferences("sms_debug_logs", MODE_PRIVATE)
+                    val logs = prefs.getStringSet("debug_logs", setOf()) ?: setOf()
+                    val sortedLogs = logs.sortedBy { it.split(":")[0].toLongOrNull() ?: 0L }
+                    result.success(sortedLogs.joinToString("\n"))
+                }
                 else -> {
                     Log.w("MainActivity", "Unknown method: ${call.method}")
                     result.notImplemented()

@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.SharedPreferences
 import android.database.ContentObserver
 import android.database.Cursor
 import android.net.Uri
@@ -208,14 +209,43 @@ class SmsMonitorService : Service() {
     private fun sendDebugLogToFlutter(message: String) {
         try {
             Log.d("SmsMonitorService", "Attempting to send debug log: $message")
+            
+            // Try method channel first
             if (methodChannel != null) {
                 methodChannel?.invokeMethod("debugLog", "SERVICE: $message")
-                Log.d("SmsMonitorService", "Debug log sent successfully")
+                Log.d("SmsMonitorService", "Debug log sent via method channel")
             } else {
-                Log.e("SmsMonitorService", "Method channel is null, cannot send debug log")
+                Log.e("SmsMonitorService", "Method channel is null, using shared preferences")
             }
+            
+            // Also write to shared preferences as backup
+            writeDebugLogToSharedPrefs("SERVICE: $message")
+            
         } catch (e: Exception) {
             Log.e("SmsMonitorService", "Error sending debug log: ${e.message}")
+            // Fallback to shared preferences
+            writeDebugLogToSharedPrefs("SERVICE ERROR: ${e.message}")
+        }
+    }
+
+    private fun writeDebugLogToSharedPrefs(message: String) {
+        try {
+            val prefs = getSharedPreferences("sms_debug_logs", MODE_PRIVATE)
+            val existingLogs = prefs.getStringSet("debug_logs", mutableSetOf()) ?: mutableSetOf()
+            existingLogs.add("${System.currentTimeMillis()}: $message")
+            
+            // Keep only last 50 logs
+            if (existingLogs.size > 50) {
+                val sortedLogs = existingLogs.sortedBy { it.split(":")[0].toLongOrNull() ?: 0L }
+                val recentLogs = sortedLogs.takeLast(50).toSet()
+                prefs.edit().putStringSet("debug_logs", recentLogs).apply()
+            } else {
+                prefs.edit().putStringSet("debug_logs", existingLogs).apply()
+            }
+            
+            Log.d("SmsMonitorService", "Debug log written to shared preferences: $message")
+        } catch (e: Exception) {
+            Log.e("SmsMonitorService", "Error writing to shared preferences: ${e.message}")
         }
     }
 

@@ -226,6 +226,32 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _getServiceDebugLogs() async {
+    setState(() {
+      _debugLogs.add('Getting service debug logs...');
+    });
+
+    try {
+      final result = await _channel.invokeMethod('getServiceDebugLogs');
+      if (result != null && result.isNotEmpty) {
+        final logs = result.split('\n');
+        setState(() {
+          for (final log in logs) {
+            _debugLogs.add('SERVICE: $log');
+          }
+        });
+      } else {
+        setState(() {
+          _debugLogs.add('No service debug logs found');
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error getting service debug logs: $e');
+      });
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _debugLogs.clear();
@@ -372,7 +398,10 @@ class _DebugScreenState extends State<DebugScreen> {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Container(), // Empty space
+                          child: ElevatedButton(
+                            onPressed: _getServiceDebugLogs,
+                            child: const Text('Get Service Logs'),
+                          ),
                         ),
                       ],
                     ),
