@@ -15,9 +15,12 @@ class SmsReceiver : BroadcastReceiver() {
     private var methodChannel: MethodChannel? = null
 
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d("SmsReceiver", "SMS received!")
+        Log.d("SmsReceiver", "Broadcast received!")
+        Log.d("SmsReceiver", "Action: ${intent.action}")
+        Log.d("SmsReceiver", "Intent: $intent")
         
         if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
+            Log.d("SmsReceiver", "SMS_RECEIVED_ACTION detected!")
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
             Log.d("SmsReceiver", "Found ${messages.size} messages")
             
@@ -28,10 +31,13 @@ class SmsReceiver : BroadcastReceiver() {
                 
                 Log.d("SmsReceiver", "Processing SMS from: $sender")
                 Log.d("SmsReceiver", "Message: $messageBody")
+                Log.d("SmsReceiver", "Timestamp: $timestamp")
                 
                 // Send to Flutter
                 sendSmsToFlutter(context, sender, messageBody, timestamp)
             }
+        } else {
+            Log.w("SmsReceiver", "Received broadcast with action: ${intent.action}")
         }
     }
 

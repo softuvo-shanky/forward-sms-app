@@ -78,6 +78,24 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _checkSmsReceiverStatus() async {
+    setState(() {
+      _debugLogs.add('Checking SMS receiver status...');
+    });
+
+    try {
+      // Check if we can call the SMS receiver directly
+      final result = await _channel.invokeMethod('checkSmsReceiver');
+      setState(() {
+        _debugLogs.add('SMS receiver status: $result');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error checking SMS receiver: $e');
+      });
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _debugLogs.clear();
@@ -115,9 +133,22 @@ class _DebugScreenState extends State<DebugScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _testSmsReceiver,
-                      child: const Text('Test SMS Receiver'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _testSmsReceiver,
+                            child: const Text('Test SMS Receiver'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _checkSmsReceiverStatus,
+                            child: const Text('Check Status'),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Text(

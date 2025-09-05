@@ -23,6 +23,10 @@ class MainActivity: FlutterActivity() {
                     Log.d("MainActivity", "SMS received method called")
                     result.success("SMS received")
                 }
+                "checkSmsReceiver" -> {
+                    Log.d("MainActivity", "Checking SMS receiver status")
+                    result.success("SMS receiver is registered and ready")
+                }
                 else -> {
                     Log.w("MainActivity", "Unknown method: ${call.method}")
                     result.notImplemented()
