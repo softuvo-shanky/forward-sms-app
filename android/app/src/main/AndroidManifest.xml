@@ -42,6 +42,12 @@
             </intent-filter>
         </receiver>
         
+        <service
+            android:name=".SmsMonitorService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+        
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

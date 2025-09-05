@@ -141,10 +141,66 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _startSmsMonitoring() async {
+    setState(() {
+      _debugLogs.add('Starting SMS monitoring service...');
+    });
+
+    try {
+      await _channel.invokeMethod('startSmsMonitoring');
+      setState(() {
+        _debugLogs.add('SMS monitoring service started');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error starting SMS monitoring: $e');
+      });
+    }
+  }
+
+  Future<void> _stopSmsMonitoring() async {
+    setState(() {
+      _debugLogs.add('Stopping SMS monitoring service...');
+    });
+
+    try {
+      await _channel.invokeMethod('stopSmsMonitoring');
+      setState(() {
+        _debugLogs.add('SMS monitoring service stopped');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error stopping SMS monitoring: $e');
+      });
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _debugLogs.clear();
     });
+  }
+
+  Future<void> _copyLogs() async {
+    if (_debugLogs.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No logs to copy')),
+      );
+      return;
+    }
+
+    final logsText = _debugLogs.asMap().entries
+        .map((entry) => '${entry.key + 1}. ${entry.value}')
+        .join('\n');
+    
+    await Clipboard.setData(ClipboardData(text: logsText));
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Logs copied to clipboard!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -155,6 +211,11 @@ class _DebugScreenState extends State<DebugScreen> {
         backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed: _copyLogs,
+            tooltip: 'Copy Logs',
+          ),
           IconButton(
             icon: const Icon(Icons.clear_all),
             onPressed: _clearLogs,
@@ -218,6 +279,24 @@ class _DebugScreenState extends State<DebugScreen> {
                       children: [
                         Expanded(
                           child: ElevatedButton(
+                            onPressed: _startSmsMonitoring,
+                            child: const Text('Start Monitoring'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _stopSmsMonitoring,
+                            child: const Text('Stop Monitoring'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
                             onPressed: _clearLogs,
                             child: const Text('Clear Logs'),
                           ),
@@ -253,10 +332,16 @@ class _DebugScreenState extends State<DebugScreen> {
                           ),
                           const Spacer(),
                           IconButton(
+                            icon: const Icon(Icons.copy),
+                            onPressed: _copyLogs,
+                            tooltip: 'Copy All Logs',
+                          ),
+                          IconButton(
                             icon: const Icon(Icons.refresh),
                             onPressed: () {
                               setState(() {});
                             },
+                            tooltip: 'Refresh',
                           ),
                         ],
                       ),

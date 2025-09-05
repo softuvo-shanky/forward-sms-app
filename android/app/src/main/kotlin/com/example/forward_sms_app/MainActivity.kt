@@ -54,6 +54,18 @@ class MainActivity: FlutterActivity() {
                     sendBroadcast(intent)
                     result.success("Broadcast sent")
                 }
+                "startSmsMonitoring" -> {
+                    Log.d("MainActivity", "Starting SMS monitoring service")
+                    val serviceIntent = Intent(this, SmsMonitorService::class.java)
+                    startService(serviceIntent)
+                    result.success("SMS monitoring started")
+                }
+                "stopSmsMonitoring" -> {
+                    Log.d("MainActivity", "Stopping SMS monitoring service")
+                    val serviceIntent = Intent(this, SmsMonitorService::class.java)
+                    stopService(serviceIntent)
+                    result.success("SMS monitoring stopped")
+                }
                 else -> {
                     Log.w("MainActivity", "Unknown method: ${call.method}")
                     result.notImplemented()
