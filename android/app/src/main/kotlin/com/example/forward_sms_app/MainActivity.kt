@@ -4,6 +4,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.util.Log
+import android.content.Intent
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "sms_service"
@@ -46,6 +47,12 @@ class MainActivity: FlutterActivity() {
                         smsData["timestamp"] as String
                     )
                     result.success("SMS receiver triggered")
+                }
+                "testBroadcastReceiver" -> {
+                    Log.d("MainActivity", "Testing broadcast receiver")
+                    val intent = Intent("android.provider.Telephony.SMS_RECEIVED")
+                    sendBroadcast(intent)
+                    result.success("Broadcast sent")
                 }
                 else -> {
                     Log.w("MainActivity", "Unknown method: ${call.method}")

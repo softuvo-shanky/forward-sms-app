@@ -123,6 +123,24 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _testBroadcastReceiver() async {
+    setState(() {
+      _debugLogs.add('Testing broadcast receiver...');
+    });
+
+    try {
+      // Test if we can send a broadcast to our receiver
+      await _channel.invokeMethod('testBroadcastReceiver');
+      setState(() {
+        _debugLogs.add('Broadcast test sent');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error testing broadcast receiver: $e');
+      });
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _debugLogs.clear();
@@ -189,9 +207,24 @@ class _DebugScreenState extends State<DebugScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: ElevatedButton(
+                            onPressed: _testBroadcastReceiver,
+                            child: const Text('Broadcast Test'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
                             onPressed: _clearLogs,
                             child: const Text('Clear Logs'),
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(), // Empty space
                         ),
                       ],
                     ),
