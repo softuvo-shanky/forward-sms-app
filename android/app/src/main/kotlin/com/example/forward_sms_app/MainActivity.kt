@@ -102,7 +102,12 @@ class MainActivity: FlutterActivity() {
                                         "getSmsFromService" -> {
                             Log.d("MainActivity", "Getting SMS from service")
                             val prefs = getSharedPreferences("sms_data", MODE_PRIVATE)
-                            val smsMessages = prefs.getStringList("sms_messages") ?: listOf()
+                            val smsJsonString = prefs.getString("sms_messages_json", "") ?: ""
+                            val smsMessages = if (smsJsonString.isNotEmpty()) {
+                                smsJsonString.split("|||")
+                            } else {
+                                listOf()
+                            }
                             val sortedSms = smsMessages.sortedBy { 
                                 it.split("|").find { it.startsWith("received_at=") }?.split("=")?.get(1)?.toLongOrNull() ?: 0L 
                             }
