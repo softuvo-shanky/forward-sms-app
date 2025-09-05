@@ -23,6 +23,10 @@ class MainActivity: FlutterActivity() {
                     Log.d("MainActivity", "SMS received method called")
                     result.success("SMS received")
                 }
+                "debugLog" -> {
+                    Log.d("MainActivity", "Debug log: ${call.arguments}")
+                    result.success("Debug log received")
+                }
                 "checkSmsReceiver" -> {
                     Log.d("MainActivity", "Checking SMS receiver status")
                     result.success("SMS receiver is registered and ready")

@@ -32,6 +32,10 @@ class _DebugScreenState extends State<DebugScreen> {
         setState(() {
           _debugLogs.add('SMS received: ${smsData['sender']} - ${smsData['message']}');
         });
+      } else if (call.method == 'debugLog') {
+        setState(() {
+          _debugLogs.add('ANDROID: ${call.arguments}');
+        });
       }
     });
   }
