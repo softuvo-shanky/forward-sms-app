@@ -54,7 +54,11 @@ class SmsService {
     });
     print('✅ SMS listener set up successfully');
     
-    // Test the method channel immediately
+    // Test the method channel immediately (async)
+    _testMethodChannel();
+  }
+
+  static Future<void> _testMethodChannel() async {
     print('🧪 Testing method channel setup...');
     try {
       await _channel.invokeMethod('test', {'test': 'Flutter method channel is working'});
