@@ -41,10 +41,13 @@ class SmsService {
     print('🔧 Setting up SMS listener...');
     _channel.setMethodCallHandler((call) async {
       print('📞 Method called: ${call.method}');
+      print('📞 Method arguments: ${call.arguments}');
       if (call.method == 'onSmsReceived') {
         final Map<dynamic, dynamic> smsData = call.arguments;
         print('📱 Processing SMS data: $smsData');
         await _handleSmsReceived(smsData);
+      } else if (call.method == 'debugLog') {
+        print('🐛 DEBUG: ${call.arguments}');
       } else {
         print('⚠️ Unknown method: ${call.method}');
       }

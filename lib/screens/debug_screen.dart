@@ -398,9 +398,40 @@ class _DebugScreenState extends State<DebugScreen> {
       setState(() {
         _debugLogs.add('Simulated SMS sent to processing');
       });
+      
+      // Wait a moment and check if it was processed
+      await Future.delayed(const Duration(seconds: 2));
+      await _checkSmsLogs();
     } catch (e) {
       setState(() {
         _debugLogs.add('Error simulating SMS: $e');
+      });
+    }
+  }
+
+  Future<void> _testMethodChannelDirectly() async {
+    setState(() {
+      _debugLogs.add('Testing method channel directly...');
+    });
+
+    try {
+      // Test if we can call the method channel directly
+      await _channel.invokeMethod('onSmsReceived', {
+        'sender': 'DirectTest',
+        'message': 'Direct method channel test',
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      setState(() {
+        _debugLogs.add('Direct method channel call successful');
+      });
+      
+      // Wait and check logs
+      await Future.delayed(const Duration(seconds: 2));
+      await _checkSmsLogs();
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error with direct method channel: $e');
       });
     }
   }
@@ -644,9 +675,24 @@ class _DebugScreenState extends State<DebugScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: ElevatedButton(
+                            onPressed: _testMethodChannelDirectly,
+                            child: const Text('Test Method Channel'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
                             onPressed: _checkSmsLogs,
                             child: const Text('Check SMS Logs'),
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(), // Empty space
                         ),
                       ],
                     ),
