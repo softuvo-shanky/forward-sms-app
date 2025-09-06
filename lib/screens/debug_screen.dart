@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../services/sms_service_simple.dart';
+import '../services/email_service.dart';
 
 class DebugScreen extends StatefulWidget {
   const DebugScreen({super.key});
@@ -334,6 +335,99 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _checkSmsForwardingStatus() async {
+    setState(() {
+      _debugLogs.add('Checking SMS forwarding status...');
+    });
+
+    try {
+      final isEnabled = await SmsService.isEnabled();
+      final smtpConfig = await EmailService.getSmtpConfig();
+      
+      setState(() {
+        _debugLogs.add('SMS Forwarding Enabled: $isEnabled');
+        _debugLogs.add('SMTP Config: ${smtpConfig != null ? "Configured" : "Not Configured"}');
+        if (smtpConfig != null) {
+          _debugLogs.add('SMTP Host: ${smtpConfig['smtp_host']}');
+          _debugLogs.add('SMTP Port: ${smtpConfig['smtp_port']}');
+          _debugLogs.add('Recipient: ${smtpConfig['recipient_email']}');
+          _debugLogs.add('Sender: ${smtpConfig['sender_email']}');
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error checking SMS forwarding status: $e');
+      });
+    }
+  }
+
+  Future<void> _testEmailSending() async {
+    setState(() {
+      _debugLogs.add('Testing email sending...');
+    });
+
+    try {
+      await EmailService.sendSmsToEmail(
+        'TestSender',
+        'This is a test SMS message for debugging',
+        DateTime.now().toIso8601String(),
+      );
+      setState(() {
+        _debugLogs.add('Test email sent successfully!');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error sending test email: $e');
+      });
+    }
+  }
+
+  Future<void> _simulateSmsReceived() async {
+    setState(() {
+      _debugLogs.add('Simulating SMS received...');
+    });
+
+    try {
+      // Simulate an SMS being received through the method channel
+      await _channel.invokeMethod('onSmsReceived', {
+        'sender': 'SimulatedSender',
+        'message': 'This is a simulated SMS for testing forwarding',
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      setState(() {
+        _debugLogs.add('Simulated SMS sent to processing');
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error simulating SMS: $e');
+      });
+    }
+  }
+
+  Future<void> _checkSmsLogs() async {
+    setState(() {
+      _debugLogs.add('Checking SMS logs...');
+    });
+
+    try {
+      final logs = await SmsService.getSmsLogs();
+      setState(() {
+        _debugLogs.add('SMS Logs count: ${logs.length}');
+        for (int i = 0; i < logs.length && i < 10; i++) {
+          _debugLogs.add('Log ${i + 1}: ${logs[i]}');
+        }
+        if (logs.length > 10) {
+          _debugLogs.add('... and ${logs.length - 10} more logs');
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Error checking SMS logs: $e');
+      });
+    }
+  }
+
   void _clearLogs() {
     setState(() {
       _debugLogs.clear();
@@ -516,6 +610,42 @@ class _DebugScreenState extends State<DebugScreen> {
                           child: ElevatedButton(
                             onPressed: _checkSmsFromService,
                             child: const Text('Check SMS Processing'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _checkSmsForwardingStatus,
+                            child: const Text('Check Forwarding Status'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _testEmailSending,
+                            child: const Text('Test Email Sending'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _simulateSmsReceived,
+                            child: const Text('Simulate SMS Received'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _checkSmsLogs,
+                            child: const Text('Check SMS Logs'),
                           ),
                         ),
                       ],

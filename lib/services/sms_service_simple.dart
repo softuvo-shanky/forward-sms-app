@@ -72,12 +72,18 @@ class SmsService {
       
       if (isEnabled) {
         print('📧 Attempting to forward SMS to email...');
-        // Forward to email
-        await EmailService.sendSmsToEmail(sender, message, timestamp);
-        print('📧 SMS forwarding completed');
-        
-        // Log the successful send
-        await logSmsSent(sender, message);
+        try {
+          // Forward to email
+          await EmailService.sendSmsToEmail(sender, message, timestamp);
+          print('📧 SMS forwarding completed successfully');
+          
+          // Log the successful send
+          await logSmsSent(sender, message);
+        } catch (emailError) {
+          print('❌ Error sending email: $emailError');
+          // Still log the SMS even if email fails
+          await logSmsSent(sender, message);
+        }
       } else {
         print('⚠️ SMS forwarding is disabled');
       }
