@@ -436,6 +436,34 @@ class _DebugScreenState extends State<DebugScreen> {
     }
   }
 
+  Future<void> _checkMethodChannelStatus() async {
+    setState(() {
+      _debugLogs.add('Checking method channel status...');
+    });
+
+    try {
+      // Test basic method channel communication
+      final result = await _channel.invokeMethod('test', {'test': 'Method channel status check'});
+      setState(() {
+        _debugLogs.add('Method channel test result: $result');
+      });
+      
+      // Test if we can receive method calls
+      setState(() {
+        _debugLogs.add('Method channel is working - can send calls to Android');
+        _debugLogs.add('Now testing if Android can call Flutter...');
+      });
+      
+      // Trigger a test from Android side
+      await _channel.invokeMethod('testServiceCommunication');
+      
+    } catch (e) {
+      setState(() {
+        _debugLogs.add('Method channel error: $e');
+      });
+    }
+  }
+
   Future<void> _checkSmsLogs() async {
     setState(() {
       _debugLogs.add('Checking SMS logs...');
@@ -692,7 +720,10 @@ class _DebugScreenState extends State<DebugScreen> {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Container(), // Empty space
+                          child: ElevatedButton(
+                            onPressed: _checkMethodChannelStatus,
+                            child: const Text('Check Method Channel'),
+                          ),
                         ),
                       ],
                     ),

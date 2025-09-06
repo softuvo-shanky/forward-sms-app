@@ -53,6 +53,15 @@ class SmsService {
       }
     });
     print('✅ SMS listener set up successfully');
+    
+    // Test the method channel immediately
+    print('🧪 Testing method channel setup...');
+    try {
+      await _channel.invokeMethod('test', {'test': 'Flutter method channel is working'});
+      print('✅ Method channel test successful');
+    } catch (e) {
+      print('❌ Method channel test failed: $e');
+    }
   }
 
   static Future<void> _handleSmsReceived(Map<dynamic, dynamic> smsData) async {
