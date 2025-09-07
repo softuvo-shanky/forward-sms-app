@@ -12,9 +12,16 @@ class EmailService {
 
   static Future<void> sendSmsToEmail(String sender, String message, String timestamp) async {
     try {
+      print('📧 === EMAIL SERVICE START ===');
+      print('📧 Attempting to send SMS to email...');
+      print('📧 Sender: $sender');
+      print('📧 Message length: ${message.length}');
+      print('📧 Timestamp: $timestamp');
+      
       final prefs = await SharedPreferences.getInstance();
       
       // Get SMTP configuration
+      print('📧 Loading SMTP configuration...');
       final smtpHost = prefs.getString('smtp_host');
       final smtpPort = prefs.getInt('smtp_port') ?? 587;
       final smtpUsername = prefs.getString('smtp_username');
@@ -22,13 +29,23 @@ class EmailService {
       final recipientEmail = prefs.getString('recipient_email');
       final senderEmail = prefs.getString('sender_email');
 
+      print('📧 SMTP Config loaded:');
+      print('📧 Host: $smtpHost');
+      print('📧 Port: $smtpPort');
+      print('📧 Username: $smtpUsername');
+      print('📧 Password: ${smtpPassword != null && smtpPassword.length > 0 ? '***' + smtpPassword.substring(smtpPassword.length - 3) : 'EMPTY'}');
+      print('📧 Recipient: $recipientEmail');
+      print('📧 Sender: $senderEmail');
+
       if (smtpHost == null || smtpUsername == null || smtpPassword == null || 
           recipientEmail == null || senderEmail == null) {
-        print('SMTP configuration incomplete');
-        return;
+        print('📧 ❌ SMTP configuration incomplete');
+        print('📧 Missing: ${smtpHost == null ? 'host ' : ''}${smtpUsername == null ? 'username ' : ''}${smtpPassword == null ? 'password ' : ''}${recipientEmail == null ? 'recipient ' : ''}${senderEmail == null ? 'sender ' : ''}');
+        throw Exception('SMTP configuration incomplete');
       }
 
       // Create email message
+      print('📧 Creating email message...');
       final emailMessage = Message()
         ..from = Address(senderEmail, 'SMS Forwarder')
         ..recipients.add(recipientEmail)
@@ -43,7 +60,10 @@ class EmailService {
           </div>
         ''';
 
+      print('📧 Email message created successfully');
+
       // Configure SMTP server
+      print('📧 Configuring SMTP server...');
       final smtpServer = SmtpServer(
         smtpHost,
         port: smtpPort,
@@ -53,12 +73,19 @@ class EmailService {
         ssl: smtpPort == 465,
       );
 
+      print('📧 SMTP server configured');
+      print('📧 Attempting to send email...');
+
       // Send email
       final sendReport = await send(emailMessage, smtpServer);
-      print('Email sent successfully: ${sendReport.toString()}');
+      print('📧 ✅ Email sent successfully: ${sendReport.toString()}');
+      print('📧 === EMAIL SERVICE COMPLETED ===');
       
     } catch (e) {
-      print('Error sending email: $e');
+      print('📧 ❌ Error sending email: $e');
+      print('📧 ❌ Error details: ${e.toString()}');
+      print('📧 === EMAIL SERVICE FAILED ===');
+      rethrow; // Re-throw to let caller handle the error
     }
   }
 

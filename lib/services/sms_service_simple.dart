@@ -68,43 +68,53 @@ class SmsService {
     }
   }
 
-  static Future<void> _handleSmsReceived(Map<dynamic, dynamic> smsData) async {
+  static Future<void> handleSmsReceived(Map<dynamic, dynamic> smsData) async {
     try {
+      print('📱 === HANDLING SMS RECEIVED ===');
       final String sender = smsData['sender'] ?? 'Unknown';
       final String message = smsData['message'] ?? '';
       final String timestamp = smsData['timestamp'] ?? DateTime.now().toString();
 
       print('📱 SMS received from: $sender');
-      print('📱 Message: $message');
+      print('📱 Message length: ${message.length}');
+      print('📱 Message preview: ${message.length > 100 ? message.substring(0, 100) + '...' : message}');
       print('📱 Timestamp: $timestamp');
 
       // Check if forwarding is enabled
+      print('📱 Checking SMS forwarding configuration...');
       final prefs = await SharedPreferences.getInstance();
       final isEnabled = prefs.getBool('sms_forwarding_enabled') ?? false;
       
       print('📱 SMS forwarding enabled: $isEnabled');
       print('📱 Processing SMS from: $sender');
-      print('📱 Message length: ${message.length}');
       
       if (isEnabled) {
-        print('📧 Attempting to forward SMS to email...');
+        print('📧 ✅ SMS forwarding is ENABLED - Attempting to forward SMS to email...');
         try {
           // Forward to email
+          print('📧 Calling EmailService.sendSmsToEmail...');
           await EmailService.sendSmsToEmail(sender, message, timestamp);
-          print('📧 SMS forwarding completed successfully');
+          print('📧 ✅ SMS forwarding completed successfully');
           
           // Log the successful send
+          print('📝 Logging successful SMS send...');
           await logSmsSent(sender, message);
+          print('📝 ✅ SMS logged successfully');
         } catch (emailError) {
           print('❌ Error sending email: $emailError');
+          print('❌ Email error details: ${emailError.toString()}');
           // Still log the SMS even if email fails
+          print('📝 Logging SMS despite email failure...');
           await logSmsSent(sender, message);
+          print('📝 ✅ SMS logged despite email failure');
         }
       } else {
-        print('⚠️ SMS forwarding is disabled');
+        print('⚠️ SMS forwarding is DISABLED - SMS will not be forwarded');
       }
+      print('📱 === SMS HANDLING COMPLETED ===');
     } catch (e) {
       print('❌ Error handling SMS: $e');
+      print('❌ Error details: ${e.toString()}');
     }
   }
 
@@ -172,15 +182,22 @@ class SmsService {
 
   static Future<void> _checkForSmsFromService() async {
     try {
-      print('🔍 Checking for SMS from service...');
+      print('🔍 === CHECKING SMS FROM SERVICE ===');
       final prefs = await SharedPreferences.getInstance();
       final smsJsonString = prefs.getString('sms_messages_json') ?? '';
       print('📄 SMS JSON string length: ${smsJsonString.length}');
+      print('📄 SMS JSON string preview: ${smsJsonString.length > 100 ? smsJsonString.substring(0, 100) + '...' : smsJsonString}');
+      
       final smsMessages = smsJsonString.isNotEmpty ? smsJsonString.split('|||') : [];
       print('📱 Found ${smsMessages.length} SMS messages in shared preferences');
+      print('📱 Processed SMS IDs count: ${_processedSmsIds.length}');
       
-      for (final smsJson in smsMessages) {
+      for (int i = 0; i < smsMessages.length; i++) {
+        final smsJson = smsMessages[i];
         try {
+          print('📱 Processing SMS ${i + 1}/${smsMessages.length}');
+          print('📱 Raw SMS JSON: $smsJson');
+          
           final parts = smsJson.split('|');
           String sender = 'Unknown';
           String message = '';
@@ -199,28 +216,32 @@ class SmsService {
             }
           }
           
+          print('📱 Parsed SMS - Sender: $sender, Message length: ${message.length}, Timestamp: $timestamp, ReceivedAt: $receivedAt');
+          
           // Create unique ID for this SMS
           final smsId = '${sender}_${timestamp}_${receivedAt}';
+          print('📱 Generated SMS ID: $smsId');
           
           // Only process if we haven't processed this SMS before
           if (!_processedSmsIds.contains(smsId)) {
             _processedSmsIds.add(smsId);
-            
-            print('📱 Processing SMS from service - From: $sender');
+            print('📱 ✅ NEW SMS - Processing SMS from service - From: $sender');
             print('📱 SMS ID: $smsId');
             print('📱 Message preview: ${message.length > 50 ? message.substring(0, 50) + '...' : message}');
-            await _handleSmsReceived({
+            await handleSmsReceived({
               'sender': sender,
               'message': message,
               'timestamp': timestamp,
             });
           } else {
-            print('📱 SMS already processed: $smsId');
+            print('📱 ⏭️ SKIPPED - SMS already processed: $smsId');
           }
         } catch (e) {
-          print('❌ Error parsing SMS from service: $e');
+          print('❌ Error parsing SMS ${i + 1} from service: $e');
+          print('❌ Raw SMS that failed: $smsJson');
         }
       }
+      print('🔍 === SMS CHECK COMPLETED ===');
     } catch (e) {
       print('❌ Error checking SMS from service: $e');
     }

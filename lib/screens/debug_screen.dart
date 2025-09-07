@@ -97,6 +97,9 @@ class _DebugScreenState extends State<DebugScreen> {
     // Test 11: Check SMS logs
     await _checkSmsLogs();
     
+    // Test 12: Manual SMS processing test
+    await _manualSmsProcessingTest();
+    
     _addLog('✅ Automatic diagnostics completed!');
     setState(() {
       _isAutoTesting = false;
@@ -314,6 +317,21 @@ class _DebugScreenState extends State<DebugScreen> {
       }
     } catch (e) {
       _addLog('❌ Error checking SMS logs: $e');
+    }
+  }
+
+  Future<void> _manualSmsProcessingTest() async {
+    _addLog('🧪 Manual SMS processing test...');
+    try {
+      // Simulate an SMS being received directly
+      await SmsService.handleSmsReceived({
+        'sender': 'ManualTest',
+        'message': 'This is a manual test SMS for debugging',
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      _addLog('✅ Manual SMS processing test completed');
+    } catch (e) {
+      _addLog('❌ Error in manual SMS processing test: $e');
     }
   }
 

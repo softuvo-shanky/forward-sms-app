@@ -301,84 +301,129 @@ class SmsMonitorService : Service() {
 
                 private fun sendSmsToFlutter(sender: String, message: String, timestamp: String) {
                 try {
+                    Log.d("SmsMonitorService", "=== SMS PROCESSING START ===")
                     Log.d("SmsMonitorService", "Sending SMS to Flutter - From: $sender")
+                    Log.d("SmsMonitorService", "Message length: ${message.length}")
+                    Log.d("SmsMonitorService", "Timestamp: $timestamp")
+                    sendDebugLogToFlutter("=== SMS PROCESSING START ===")
                     sendDebugLogToFlutter("Sending SMS to Flutter - From: $sender")
+                    sendDebugLogToFlutter("Message length: ${message.length}")
+                    sendDebugLogToFlutter("Timestamp: $timestamp")
                     
                     // Try to setup method channel if not already done
                     if (methodChannel == null) {
+                        Log.d("SmsMonitorService", "Method channel is null, attempting setup...")
+                        sendDebugLogToFlutter("Method channel is null, attempting setup...")
                         try {
                             val flutterEngine = FlutterEngineCache.getInstance().get("main")
                             if (flutterEngine != null) {
                                 methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sms_service")
                                 Log.d("SmsMonitorService", "Method channel setup successful on retry")
                                 sendDebugLogToFlutter("Method channel setup successful on retry")
+                            } else {
+                                Log.w("SmsMonitorService", "Flutter engine still not available")
+                                sendDebugLogToFlutter("Flutter engine still not available")
                             }
                         } catch (e: Exception) {
                             Log.w("SmsMonitorService", "Could not setup method channel on retry: ${e.message}")
+                            sendDebugLogToFlutter("Could not setup method channel on retry: ${e.message}")
                         }
+                    } else {
+                        Log.d("SmsMonitorService", "Method channel already exists")
+                        sendDebugLogToFlutter("Method channel already exists")
                     }
                     
                     // Try method channel first
+                    Log.d("SmsMonitorService", "Attempting to send via method channel...")
+                    sendDebugLogToFlutter("Attempting to send via method channel...")
                     try {
                         methodChannel?.invokeMethod("onSmsReceived", mapOf(
                             "sender" to sender,
                             "message" to message,
                             "timestamp" to timestamp
                         ))
-                        Log.d("SmsMonitorService", "SMS sent via method channel")
-                        sendDebugLogToFlutter("SMS sent via method channel")
+                        Log.d("SmsMonitorService", "✅ SMS sent via method channel successfully")
+                        sendDebugLogToFlutter("✅ SMS sent via method channel successfully")
                     } catch (e: Exception) {
-                        Log.e("SmsMonitorService", "Method channel failed: ${e.message}")
-                        sendDebugLogToFlutter("Method channel failed: ${e.message}")
+                        Log.e("SmsMonitorService", "❌ Method channel failed: ${e.message}")
+                        sendDebugLogToFlutter("❌ Method channel failed: ${e.message}")
+                        e.printStackTrace()
                     }
                     
                     // Always write to shared preferences as backup
+                    Log.d("SmsMonitorService", "Writing SMS to shared preferences...")
+                    sendDebugLogToFlutter("Writing SMS to shared preferences...")
                     writeSmsToSharedPrefs(sender, message, timestamp)
                     
-                    Log.d("SmsMonitorService", "SMS sent to Flutter successfully")
-                    sendDebugLogToFlutter("SMS sent to Flutter successfully")
+                    Log.d("SmsMonitorService", "✅ SMS processing completed")
+                    sendDebugLogToFlutter("✅ SMS processing completed")
                     
                 } catch (e: Exception) {
-                    Log.e("SmsMonitorService", "Error sending SMS to Flutter: ${e.message}")
-                    sendDebugLogToFlutter("Error sending SMS to Flutter: ${e.message}")
+                    Log.e("SmsMonitorService", "❌ Error sending SMS to Flutter: ${e.message}")
+                    sendDebugLogToFlutter("❌ Error sending SMS to Flutter: ${e.message}")
+                    e.printStackTrace()
                 }
             }
 
     private fun writeSmsToSharedPrefs(sender: String, message: String, timestamp: String) {
         try {
+            Log.d("SmsMonitorService", "=== WRITING SMS TO SHARED PREFERENCES ===")
+            sendDebugLogToFlutter("=== WRITING SMS TO SHARED PREFERENCES ===")
+            
             val prefs = getSharedPreferences("sms_data", MODE_PRIVATE)
+            val receivedAt = System.currentTimeMillis().toString()
             val smsData = mapOf(
                 "sender" to sender,
                 "message" to message,
                 "timestamp" to timestamp,
-                "received_at" to System.currentTimeMillis().toString()
+                "received_at" to receivedAt
             )
             
+            Log.d("SmsMonitorService", "SMS Data: $smsData")
+            sendDebugLogToFlutter("SMS Data: $smsData")
+            
             val existingSms = prefs.getStringSet("sms_messages", mutableSetOf()) ?: mutableSetOf()
+            Log.d("SmsMonitorService", "Existing SMS count: ${existingSms.size}")
+            sendDebugLogToFlutter("Existing SMS count: ${existingSms.size}")
+            
             val smsJson = smsData.entries.joinToString("|") { "${it.key}=${it.value}" }
+            Log.d("SmsMonitorService", "SMS JSON: $smsJson")
+            sendDebugLogToFlutter("SMS JSON: $smsJson")
+            
             existingSms.add(smsJson)
+            Log.d("SmsMonitorService", "Added SMS to set, new count: ${existingSms.size}")
+            sendDebugLogToFlutter("Added SMS to set, new count: ${existingSms.size}")
             
             // Keep only last 20 SMS
             val finalSmsSet = if (existingSms.size > 20) {
                 val sortedSms = existingSms.sortedBy { 
                     it.split("|").find { it.startsWith("received_at=") }?.split("=")?.get(1)?.toLongOrNull() ?: 0L 
                 }
-                sortedSms.takeLast(20).toSet()
+                val trimmed = sortedSms.takeLast(20).toSet()
+                Log.d("SmsMonitorService", "Trimmed SMS set to 20, final count: ${trimmed.size}")
+                sendDebugLogToFlutter("Trimmed SMS set to 20, final count: ${trimmed.size}")
+                trimmed
             } else {
+                Log.d("SmsMonitorService", "SMS set size OK, keeping all ${existingSms.size}")
+                sendDebugLogToFlutter("SMS set size OK, keeping all ${existingSms.size}")
                 existingSms
             }
             
             // Store as JSON string for Flutter compatibility
             val smsList = finalSmsSet.toList()
             val jsonString = smsList.joinToString("|||")
+            Log.d("SmsMonitorService", "Final JSON string length: ${jsonString.length}")
+            sendDebugLogToFlutter("Final JSON string length: ${jsonString.length}")
+            
             prefs.edit().putString("sms_messages_json", jsonString).apply()
             
-            Log.d("SmsMonitorService", "SMS written to shared preferences")
-            sendDebugLogToFlutter("SMS written to shared preferences")
+            Log.d("SmsMonitorService", "✅ SMS written to shared preferences successfully")
+            sendDebugLogToFlutter("✅ SMS written to shared preferences successfully")
             
         } catch (e: Exception) {
-            Log.e("SmsMonitorService", "Error writing SMS to shared preferences: ${e.message}")
-            sendDebugLogToFlutter("Error writing SMS to shared preferences: ${e.message}")
+            Log.e("SmsMonitorService", "❌ Error writing SMS to shared preferences: ${e.message}")
+            sendDebugLogToFlutter("❌ Error writing SMS to shared preferences: ${e.message}")
+            e.printStackTrace()
         }
     }
 
