@@ -207,11 +207,15 @@ class SmsService {
             _processedSmsIds.add(smsId);
             
             print('📱 Processing SMS from service - From: $sender');
+            print('📱 SMS ID: $smsId');
+            print('📱 Message preview: ${message.length > 50 ? message.substring(0, 50) + '...' : message}');
             await _handleSmsReceived({
               'sender': sender,
               'message': message,
               'timestamp': timestamp,
             });
+          } else {
+            print('📱 SMS already processed: $smsId');
           }
         } catch (e) {
           print('❌ Error parsing SMS from service: $e');

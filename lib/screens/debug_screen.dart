@@ -94,6 +94,9 @@ class _DebugScreenState extends State<DebugScreen> {
     // Test 10: Force check SMS from service
     await _forceCheckSmsFromService();
     
+    // Test 11: Check SMS logs
+    await _checkSmsLogs();
+    
     _addLog('✅ Automatic diagnostics completed!');
     setState(() {
       _isAutoTesting = false;
@@ -291,6 +294,26 @@ class _DebugScreenState extends State<DebugScreen> {
       _addLog('✅ Force check completed');
     } catch (e) {
       _addLog('❌ Error force checking SMS from service: $e');
+    }
+  }
+
+  Future<void> _checkSmsLogs() async {
+    _addLog('📋 Checking SMS logs...');
+    try {
+      final logs = await SmsService.getSmsLogs();
+      _addLog('📋 SMS Logs count: ${logs.length}');
+      if (logs.isNotEmpty) {
+        for (int i = 0; i < logs.length && i < 5; i++) {
+          _addLog('📋 Log ${i + 1}: ${logs[i]}');
+        }
+        if (logs.length > 5) {
+          _addLog('📋 ... and ${logs.length - 5} more logs');
+        }
+      } else {
+        _addLog('📋 No SMS logs found');
+      }
+    } catch (e) {
+      _addLog('❌ Error checking SMS logs: $e');
     }
   }
 
