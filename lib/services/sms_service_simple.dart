@@ -90,6 +90,10 @@ class SmsService {
       
       if (isEnabled) {
         print('📧 ✅ SMS forwarding is ENABLED - Attempting to forward SMS to email...');
+        print('📧 About to call EmailService.sendSmsToEmail with:');
+        print('📧   - Sender: $sender');
+        print('📧   - Message length: ${message.length}');
+        print('📧   - Timestamp: $timestamp');
         try {
           // Forward to email
           print('📧 Calling EmailService.sendSmsToEmail...');
@@ -103,6 +107,7 @@ class SmsService {
         } catch (emailError) {
           print('❌ Error sending email: $emailError');
           print('❌ Email error details: ${emailError.toString()}');
+          print('❌ Email error stack trace: ${emailError.toString()}');
           // Still log the SMS even if email fails
           print('📝 Logging SMS despite email failure...');
           await logSmsSent(sender, message);
@@ -110,6 +115,7 @@ class SmsService {
         }
       } else {
         print('⚠️ SMS forwarding is DISABLED - SMS will not be forwarded');
+        print('⚠️ SMS forwarding enabled status: $isEnabled');
       }
       print('📱 === SMS HANDLING COMPLETED ===');
     } catch (e) {
@@ -228,11 +234,13 @@ class SmsService {
             print('📱 ✅ NEW SMS - Processing SMS from service - From: $sender');
             print('📱 SMS ID: $smsId');
             print('📱 Message preview: ${message.length > 50 ? message.substring(0, 50) + '...' : message}');
+            print('📱 🚀 CALLING handleSmsReceived for REAL SMS from service...');
             await handleSmsReceived({
               'sender': sender,
               'message': message,
               'timestamp': timestamp,
             });
+            print('📱 ✅ handleSmsReceived completed for REAL SMS');
           } else {
             print('📱 ⏭️ SKIPPED - SMS already processed: $smsId');
           }
