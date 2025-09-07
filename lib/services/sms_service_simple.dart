@@ -45,7 +45,7 @@ class SmsService {
       if (call.method == 'onSmsReceived') {
         final Map<dynamic, dynamic> smsData = call.arguments;
         print('📱 Processing SMS data: $smsData');
-        await _handleSmsReceived(smsData);
+        await handleSmsReceived(smsData);
       } else if (call.method == 'debugLog') {
         print('🐛 DEBUG: ${call.arguments}');
       } else {
