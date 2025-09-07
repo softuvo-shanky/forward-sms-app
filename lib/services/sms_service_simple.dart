@@ -151,6 +151,13 @@ class SmsService {
     await _checkForSmsFromService();
   }
 
+  static Future<void> forceCheckSmsFromService() async {
+    print('🔍 Force checking SMS from service...');
+    // Clear processed IDs to force reprocessing
+    _processedSmsIds.clear();
+    await _checkForSmsFromService();
+  }
+
   static Timer? _smsCheckTimer;
   static Set<String> _processedSmsIds = {};
 

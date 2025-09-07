@@ -61,15 +61,17 @@ class SmsMonitorService : Service() {
 
     private fun setupMethodChannel() {
         try {
+            // Try to get Flutter engine from cache
             val flutterEngine = FlutterEngineCache.getInstance().get("main")
             if (flutterEngine != null) {
                 methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sms_service")
                 Log.d("SmsMonitorService", "Method channel setup successful")
                 sendDebugLogToFlutter("Method channel setup successful")
             } else {
-                Log.e("SmsMonitorService", "Flutter engine not found")
-                // Try to send debug log anyway to test if method channel works
-                sendDebugLogToFlutter("ERROR: Flutter engine not found in service")
+                Log.w("SmsMonitorService", "Flutter engine not found in cache, will retry later")
+                sendDebugLogToFlutter("WARNING: Flutter engine not found in cache, will retry when SMS received")
+                // Don't treat this as an error - the service can still work
+                // The method channel will be set up when SMS are actually received
             }
         } catch (e: Exception) {
             Log.e("SmsMonitorService", "Error setting up method channel: ${e.message}")
@@ -302,6 +304,20 @@ class SmsMonitorService : Service() {
                     Log.d("SmsMonitorService", "Sending SMS to Flutter - From: $sender")
                     sendDebugLogToFlutter("Sending SMS to Flutter - From: $sender")
                     
+                    // Try to setup method channel if not already done
+                    if (methodChannel == null) {
+                        try {
+                            val flutterEngine = FlutterEngineCache.getInstance().get("main")
+                            if (flutterEngine != null) {
+                                methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "sms_service")
+                                Log.d("SmsMonitorService", "Method channel setup successful on retry")
+                                sendDebugLogToFlutter("Method channel setup successful on retry")
+                            }
+                        } catch (e: Exception) {
+                            Log.w("SmsMonitorService", "Could not setup method channel on retry: ${e.message}")
+                        }
+                    }
+                    
                     // Try method channel first
                     try {
                         methodChannel?.invokeMethod("onSmsReceived", mapOf(
@@ -316,7 +332,7 @@ class SmsMonitorService : Service() {
                         sendDebugLogToFlutter("Method channel failed: ${e.message}")
                     }
                     
-                    // Also write to shared preferences as backup
+                    // Always write to shared preferences as backup
                     writeSmsToSharedPrefs(sender, message, timestamp)
                     
                     Log.d("SmsMonitorService", "SMS sent to Flutter successfully")

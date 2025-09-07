@@ -91,6 +91,9 @@ class _DebugScreenState extends State<DebugScreen> {
     // Test 9: Get SMS from service
     await _getSmsFromService();
     
+    // Test 10: Force check SMS from service
+    await _forceCheckSmsFromService();
+    
     _addLog('✅ Automatic diagnostics completed!');
     setState(() {
       _isAutoTesting = false;
@@ -278,6 +281,16 @@ class _DebugScreenState extends State<DebugScreen> {
       }
     } catch (e) {
       _addLog('❌ Error getting SMS from service: $e');
+    }
+  }
+
+  Future<void> _forceCheckSmsFromService() async {
+    _addLog('🔄 Force checking SMS from service...');
+    try {
+      await SmsService.forceCheckSmsFromService();
+      _addLog('✅ Force check completed');
+    } catch (e) {
+      _addLog('❌ Error force checking SMS from service: $e');
     }
   }
 
