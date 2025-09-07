@@ -5,6 +5,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.util.Log
 import android.content.Intent
+import android.content.pm.PackageManager
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "sms_service"
@@ -54,7 +55,7 @@ class MainActivity: FlutterActivity() {
                     val packageManager = packageManager
                     val receiverInfo = packageManager.getReceiverInfo(
                         android.content.ComponentName(this, SmsReceiver::class.java),
-                        packageManager.GET_RECEIVERS
+                        PackageManager.GET_RECEIVERS
                     )
                     val isEnabled = receiverInfo.enabled
                     val hasPermission = checkSelfPermission(android.Manifest.permission.RECEIVE_SMS) == android.content.pm.PackageManager.PERMISSION_GRANTED
