@@ -49,10 +49,18 @@ class MainActivity: FlutterActivity() {
                     result.success("SMS receiver triggered")
                 }
                 "testBroadcastReceiver" -> {
-                    Log.d("MainActivity", "Testing broadcast receiver")
-                    val intent = Intent("android.provider.Telephony.SMS_RECEIVED")
-                    sendBroadcast(intent)
-                    result.success("Broadcast sent")
+                    Log.d("MainActivity", "Testing broadcast receiver registration")
+                    // Check if SMS receiver is properly registered
+                    val packageManager = packageManager
+                    val receiverInfo = packageManager.getReceiverInfo(
+                        android.content.ComponentName(this, SmsReceiver::class.java),
+                        packageManager.GET_RECEIVERS
+                    )
+                    val isEnabled = receiverInfo.enabled
+                    val hasPermission = checkSelfPermission(android.Manifest.permission.RECEIVE_SMS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    val status = "SMS receiver registered: $isEnabled, Permission: $hasPermission"
+                    Log.d("MainActivity", status)
+                    result.success(status)
                 }
                 "startSmsMonitoring" -> {
                     Log.d("MainActivity", "Starting SMS monitoring service")
